@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel de Controlo - Backoffice</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #1b4332; }
+        label, select, input { display: block; width: 100%; margin-bottom: 15px; padding: 10px; font-size: 1em; box-sizing: border-box; }
+        button { background: #2d6a4f; color: white; border: none; padding: 15px; width: 100%; font-size: 1.1em; cursor: pointer; border-radius: 5px; }
+        button:hover { background: #1b4332; }
+        .equipas-status { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; margin-top: 15px; }
+        .checkbox-group { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+        .checkbox-group input { width: auto; margin: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Inscrição de Elemento / Restrições</h2>
+    
+    <label>Escalão Etário:</label>
+    <select id="escalao">
+        <option value="Lobitos">Lobitos</option>
+        <option value="Exploradores">Exploradores</option>
+        <option value="Pioneiros">Pioneiros</option>
+        <option value="Caminheiros">Caminheiros</option>
+        <option value="Pais">Pais</option>
+    </select>
+
+    <label>Género:</label>
+    <select id="genero">
+        <option value="M">Masculino</option>
+        <option value="F">Feminino</option>
+    </select>
+
+    <label>Equipas Bloqueadas para este jogador:</label>
+    <div class="checkbox-group">
+        <input type="checkbox" value="1" class="bloqueio"> 1 (Os Mosqueteiros de Aramis)
+        <input type="checkbox" value="2" class="bloqueio"> 2 (A Guarda Real de d'Artagnan)
+        <input type="checkbox" value="3" class="bloqueio"> 3 (Os Conspiradores da Máscara)
+        <input type="checkbox" value="4" class="bloqueio"> 4 (Os Segredos de Milady)
+        <input type="checkbox" value="5" class="bloqueio"> 5 (Os Bravos de Porthos)
+        <input type="checkbox" value="6" class="bloqueio"> 6 (Os Eruditos de Athos)
+    </div>
+
+    <button onclick="liberarSorteio()">AUTORIZAR PRÓXIMO SORTEIO</button>
+    
+    <hr>
+    <h3>Estado Atual de Distribuição das Equipas</h3>
+    <div id="estatisticas">A carregar dados...</div>
+</div>
+
+<script src="script.js"></script>
+<script>
+    // Atualiza as estatísticas na interface do admin a cada 2 segundos
+    setInterval(() => {
+        document.getElementById('estatisticas').innerHTML = obterEstatisticasHTML();
+    }, 2000);
+</script>
+</body>
+</html>
