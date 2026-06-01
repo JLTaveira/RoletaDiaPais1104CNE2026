@@ -152,10 +152,36 @@
                 fundo.style.display = 'none';
                 eInicial.style.display = 'flex';
                 jogadorLocal = null;
-            }, 50000);
+            }, 1000);
 
         }, 10000); 
     }
 </script>
+
+<div style="
+        position: fixed; 
+        bottom: 15px; 
+        right: 15px; 
+        z-index: 9999; 
+        background: rgba(13, 27, 42, 0.9); 
+        border: 2px solid #e5ba73; 
+        padding: 8px; 
+        border-radius: 6px; 
+        text-align: center; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        max-width: 110px;
+    ">
+        <img src="PlacardPontuacao.png" alt="QR Code Placar" style="width: 100%; height: auto; display: block; border-radius: 4px;">
+        <span style="
+            display: block; 
+            font-family: Arial, sans-serif; 
+            font-size: 9px; 
+            color: #e5ba73; 
+            margin-top: 4px; 
+            font-weight: bold; 
+            letter-spacing: 0.5px;
+        ">ACOMPANHA OS RESULTADOS</span>
+    </div>
+
 </body>
 </html>
