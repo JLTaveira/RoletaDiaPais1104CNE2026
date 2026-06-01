@@ -2,21 +2,101 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Versalhes - Dashboard de Pontuação</title>
+    <title>Versalhes - Placar de Peças do Puzzle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Georgia', serif; background: #050b14; color: #e0e1dd; text-align: center; margin: 0; padding: 20px; }
-        h1 { color: #e5ba73; font-size: 2.3em; margin-bottom: 5px; }
-        .grid-dashboard { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; max-width: 1400px; margin: 20px auto; height: 75vh; }
-        .card { background: rgba(13, 27, 42, 0.8); border: 2px solid #e5ba73; border-radius: 8px; padding: 20px; }
-        #lista-ultimas { text-align: left; font-size: 1em; list-style-type: none; padding: 0; }
-        #lista-ultimas li { padding: 8px; border-bottom: 1px solid #1b263b; }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Georgia', serif; 
+            background: #050b14; 
+            color: #e0e1dd; 
+            text-align: center; 
+            margin: 0; 
+            padding: 10px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Impede o scroll na sede */
+        }
+        
+        header { padding: 5px 0; }
+        h1 { color: #e5ba73; font-size: 1.8em; margin: 0 0 2px 0; text-transform: uppercase; letter-spacing: 1px; }
+        p.sub { font-size: 1.1em; color: #e5ba73; margin: 0; font-weight: bold; }
+        
+        .grid-dashboard { 
+            display: flex; 
+            flex-direction: row; 
+            gap: 15px; 
+            flex: 1; 
+            width: 100%; 
+            max-width: 1600px; 
+            margin: 10px auto 0 auto; 
+            height: 80vh;
+        }
+        
+        .card { 
+            background: rgba(13, 27, 42, 0.85); 
+            border: 2px solid #e5ba73; 
+            border-radius: 8px; 
+            padding: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        
+        .card-grafico { 
+            flex: 2; 
+            position: relative; 
+            height: 100%; 
+        }
+        
+        .card-placar { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        h2, h3 { color: #e5ba73; margin: 0 0 10px 0; font-size: 1.3em; border-bottom: 1px solid #e5ba73; padding-bottom: 5px; }
+        
+        #tabela-pecas-detalhe { 
+            text-align: left; 
+            font-size: 1.05em; 
+            line-height: 1.6; 
+            flex: 1;
+        }
+        
+        #lista-ultimas { 
+            text-align: left; 
+            font-size: 0.9em; 
+            list-style-type: none; 
+            padding: 0; 
+            margin: 0;
+        }
+        #lista-ultimas li { 
+            padding: 5px; 
+            border-bottom: 1px solid #1b263b; 
+            color: #aaa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 📱 REGRAS ESPECÍFICAS PARA TELEMÓVEL (ECRÃS PEQUENOS) */
+        @media (max-width: 768px) {
+            body { overflow: auto; height: auto; } /* Permite scroll no telemóvel se necessário */
+            h1 { font-size: 1.4em; }
+            .grid-dashboard { flex-direction: column; height: auto; }
+            .card-grafico { height: 350px; flex: none; } /* Força o gráfico a ter um tamanho fixo e visível no tlm */
+            .card-placar { flex: none; height: auto; }
+        }
     </style>
 </head>
 <body>
 
-    <h1>PAINEL DE VERSALHES: CONQUISTA DAS PEÇAS DO PUZZLE GLOBAL</h1>
-        <p style="font-size:1.2em; color:#e5ba73; margin:0;">Meta Coletiva: 100 Peças Totais do Puzzle</p>
+    <h1>BATALHA DOS MOSQUETEIROS</h1>
+        <p style="font-size:1.2em; color:#e5ba73; margin:0;">Ter o maior número de Peças do Puzzle</p>
     
         <div class="grid-dashboard">
             <div class="card" style="position: relative; height: 100%;">
@@ -50,7 +130,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
- const PUZZLE_TOTAL_PECAS = 100; // 🧩 AJUSTA AQUI O NÚMERO TOTAL DE PEÇAS DO TEU PUZZLE REAL
+ const PUZZLE_TOTAL_PECAS = 80; // 🧩 AJUSTA AQUI O NÚMERO TOTAL DE PEÇAS DO TEU PUZZLE REAL
 
     const ctx = document.getElementById('graficoPecas').getContext('2d');
     const grafico = new Chart(ctx, {
