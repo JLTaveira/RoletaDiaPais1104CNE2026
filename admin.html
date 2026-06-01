@@ -4,36 +4,35 @@
     <meta charset="UTF-8">
     <title>Painel de Controlo - Backoffice</title>
     <style>
-        /* Esconde o painel por defeito até passar na segurança */
         #painel-protegido { display: none; }
         body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2 { color: #1b4332; }
+        .container { max-width: 950px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2, h3 { color: #1b4332; }
         label, select, input { display: block; width: 100%; margin-bottom: 15px; padding: 10px; font-size: 1em; box-sizing: border-box; }
-        button { background: #2d6a4f; color: white; border: none; padding: 15px; width: 100%; font-size: 1.1em; cursor: pointer; border-radius: 5px; }
-        button:hover { background: #1b4332; }
+        button { background: #2d6a4f; color: white; border: none; padding: 15px; width: 100%; font-size: 1.1em; cursor: pointer; border-radius: 5px; margin-bottom: 5px; }
         button:disabled { background: #6c757d; cursor: not-allowed; }
-        .checkbox-group { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
-        .checkbox-group input { width: auto; margin: 0; }
-        #erro-bloqueio { display: none; text-align: center; margin-top: 100px; color: #721c24; background: #f8d7da; padding: 30px; border-radius: 8px; border: 1px solid #f5c6cb; font-size: 1.5em; }
+        .btn-bonus { background: #d4af37; color: #0d1b2a; font-weight: bold; width: auto; display: inline-block; padding: 10px 20px; margin-right: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95em; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .flex-row { display: flex; gap: 15px; align-items: center; background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 5px solid #d4af37; }
     </style>
 </head>
 <body>
 
-<div id="erro-bloqueio">
-    ⚠️ <strong>Acesso Negado:</strong> Já existe um Painel de Controlo ativo noutra janela ou dispositivo! <br>Feche a outra sessão para poder gerir o jogo a partir daqui.
-</div>
-
 <div id="painel-protegido" class="container">
     <h2>Inscrição de Elemento / Restrições</h2>
     
-    <label>Escalão Etário:</label>
+    <label>Nome do Participante:</label>
+    <input type="text" id="nomeParticipante" placeholder="Ex: Chefe Silva, João..." required>
+
+    <label>Escalão Etário / Secção:</label>
     <select id="escalao">
-        <option value="Lobitos">Lobitos (&lt;10 anos)</option>
-        <option value="Exploradores">Exploradores (&lt;15 anos)</option>
-        <option value="Pioneiros">Pioneiros (&lt;18 anos)</option>
-        <option value="Caminheiros">Caminheiros (&lt;23 anos)</option>
-        <option value="Pais">Pais (&gt;23 anos)</option>
+        <option value="Lobitos">Lobitos</option>
+        <option value="Exploradores">Exploradores</option>
+        <option value="Pioneiros">Pioneiros</option>
+        <option value="Caminheiros">Caminheiros</option>
+        <option value="Pais">Pais</option>
     </select>
 
     <label>Género:</label>
@@ -42,8 +41,8 @@
         <option value="F">Feminino</option>
     </select>
 
-    <label>Equipas Bloqueadas para este jogador:</label>
-    <div class="checkbox-group">
+    <label>Bloquear Equipas (condicionantes):</label>
+    <div>
         <input type="checkbox" value="1" class="bloqueio"> 1 (Aramis)
         <input type="checkbox" value="2" class="bloqueio"> 2 (d'Artagnan)
         <input type="checkbox" value="3" class="bloqueio"> 3 (Máscara)
@@ -51,105 +50,129 @@
         <input type="checkbox" value="5" class="bloqueio"> 5 (Porthos)
         <input type="checkbox" value="6" class="bloqueio"> 6 (Athos)
     </div>
+    <br>
 
-    <button id="btn-autorizar" onclick="liberarSorteio()">AUTORIZAR PRÓXIMO SORTEIO</button>
+    <button id="btn-autorizar" onclick="liberarSorteio()">PREPARAR E ENVIAR PARA A ROLETA</button>
+    <button onclick="resetEmergencia()" style="background: #000; font-size: 0.85em;">🔴 RESET DE EMERGÊNCIA DA ROLETA</button>
     
     <hr>
-    <h3>Estado Atual de Distribuição das Equipas</h3>
-    <div id="estatisticas">A ligar ao Firebase...</div>
+
+    <h3>Lançar Peças de Bónus (Jogos Presenciais)</h3>
+    
+    <div class="flex-row">
+        <div>
+            <strong>Jogos Intermédios (Atribuir +5 Peças):</strong><br>
+            <small>Selecione uma das 3 equipas vencedoras de cada vez</small>
+        </div>
+        <div>
+            <button class="btn-bonus" onclick="atribuirPecasJogo(5, 'intermedio')">Atribuir +5 Peças à Equipa Escolhida ➔</button>
+            <select id="equipa-intermedio" style="display:inline-block; width:auto; margin:0;">
+                <option value="1">Equipa 1 (Aramis)</option>
+                <option value="2">Equipa 2 (d'Artagnan)</option>
+                <option value="3">Equipa 3 (Máscara)</option>
+                <option value="4">Equipa 4 (Milady)</option>
+                <option value="5">Equipa 5 (Porthos)</option>
+                <option value="6">Equipa 6 (Athos)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="flex-row" style="border-left-color: #a71e34;">
+        <div>
+            <strong>Grande Jogo Final (Atribuir +10 Peças):</strong><br>
+            <small>Apenas 1 única equipa ganha este bónus supremo</small>
+        </div>
+        <div>
+            <button class="btn-bonus" style="background:#a71e34; color:white;" onclick="atribuirPecasJogo(10, 'final')">Atribuir +10 Peças à Campeã ➔</button>
+            <select id="equipa-final" style="display:inline-block; width:auto; margin:0;">
+                <option value="1">Equipa 1 (Aramis)</option>
+                <option value="2">Equipa 2 (d'Artagnan)</option>
+                <option value="3">Equipa 3 (Máscara)</option>
+                <option value="4">Equipa 4 (Milady)</option>
+                <option value="5">Equipa 5 (Porthos)</option>
+                <option value="6">Equipa 6 (Athos)</option>
+            </select>
+        </div>
+    </div>
+
+    <hr>
+
+    <h3>Estado das Equipas</h3>
+    <div id="estatisticas">A carregar dados do Firebase...</div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-    // ⚠️ COLOCA AQUI AS TUAS CREDENCIAIS DO FIREBASE
+    // ⚠️ COLA AQUI O TEU FIREBASE CONFIG REAL
     const firebaseConfig = {
         apiKey: "AIzaSyDPmHr8hlA5GAIfZP76GjDjeZX1as51v4Y",
         authDomain: "roletadiapais1104cne2026.firebaseapp.com",
-        //databaseURL: "https://o-teu-projeto-default-rtdb.firebaseio.com",
+        databaseURL: "https://roletadiapais1104cne2026-default-rtdb.europe-west1.firebasedatabase.app",	
         projectId: "roletadiapais1104cne2026",
         storageBucket: "roletadiapais1104cne2026.firebasestorage.app",
         messagingSenderId: "272378639090",
-        appId: "1:272378639090:web:06755b635971c1cdb4966b"
+        appId: "1:272378639090:web:06755b635971c1cdb4966b" 
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Identificador único para esta janela/sessão aberta
-    const idSessaoAtual = Math.random().toString(36).substring(2);
-
-    // SEGURANÇA 1: LOGIN LOCAL POR PALAVRA-PASSE
-    const passwordCorreta = "1104#Cla115"; // Password
-    const tentativa = prompt("Introduza o Código de Acesso:");
-    
-    if (tentativa !== passwordCorreta) {
-        alert("Código incorreto! Acesso bloqueado.");
-        document.body.innerHTML = "<h1 style='text-align:center; margin-top:100px; color:red;'>Acesso não autorizado.</h1>";
-    } else {
-        // Se a password estiver certa, regista esta sessão como ativa no Firebase
-        set(ref(db, 'adminOnline'), idSessaoAtual);
+    // Prompt Simples de Login
+    if (prompt("Código de Acesso:") === "Alerta#Servir1104") {
         document.getElementById('painel-protegido').style.display = 'block';
+    } else {
+        document.body.innerHTML = "<h1>Não autorizado.</h1>";
     }
 
-    // SEGURANÇA 2: GARANTIR APENAS 1 JANELA DE ADMIN ABERTA EM TODO O MUNDO
-    onValue(ref(db, 'adminOnline'), (snapshot) => {
-        const idSessaoAtivaNoServidor = snapshot.val();
-        // Se outra pessoa abriu o admin depois de ti, o ID no servidor muda e esta janela bloqueia
-        if (idSessaoAtivaNoServidor && idSessaoAtivaNoServidor !== idSessaoAtual) {
-            document.getElementById('painel-protegido').style.display = 'none';
-            document.getElementById('erro-bloqueio').style.display = 'block';
-        }
-    });
-
-    // Remove a sessão do Firebase quando fechares a aba/janela para libertar o acesso
-    window.addEventListener('beforeunload', () => {
-        set(ref(db, 'adminOnline'), null);
-    });
-
-
-    // --- Lógica de Sorteio e Estatísticas ---
     window.liberarSorteio = function() {
+        const nome = document.getElementById('nomeParticipante').value.trim();
         const escalao = document.getElementById('escalao').value;
         const genero = document.getElementById('genero').value;
         const checkboxes = document.querySelectorAll('.bloqueio:checked');
         const equipasBloqueadas = Array.from(checkboxes).map(cb => parseInt(cb.value));
 
+        if(!nome) { alert("Introduza o nome do participante!"); return; }
+
         set(ref(db, 'statusSorteio'), {
             estado: "AUTORIZADO",
-            jogador: { escalao, genero, equipasBloqueadas }
+            jogador: { nome, escalao, genero, equipasBloqueadas }
         });
 
+        document.getElementById('nomeParticipante').value = "";
         checkboxes.forEach(cb => cb.checked = false);
     }
 
     onValue(ref(db, 'statusSorteio/estado'), (snapshot) => {
-        const estado = snapshot.val();
-        const botao = document.getElementById('btn-autorizar');
-        if (estado === "AUTORIZADO" || estado === "A_RODAR") {
-            botao.disabled = true;
-            botao.innerText = "⏳ JOGADOR A DECIDIR O DESTINO EM VERSALHES...";
-        } else {
-            botao.disabled = false;
-            botao.innerText = "AUTORIZAR PRÓXIMO SORTEIO";
-        }
+        const est = snapshot.val();
+        const btn = document.getElementById('btn-autorizar');
+        btn.disabled = (est === "AUTORIZADO" || est === "A_RODAR");
+        if(btn.disabled) btn.innerText = "⏳ Participante a rodar a roleta...";
+        else btn.innerText = "PREPARAR E ENVIAR PARA A ROLETA";
     });
 
     onValue(ref(db, 'jogadores'), (snapshot) => {
         const dados = snapshot.val() || {};
-        const listaJogadores = Object.values(dados);
+        const lista = Object.values(dados);
+        const nomes = {1:"Aramis", 2:"d'Artagnan", 3:"Máscara", 4:"Milady", 5:"Porthos", 6:"Athos"};
         
-        const nomesEquipas = {
-            1: "Os Mosqueteiros de Aramis", 2: "A Guarda Real de d'Artagnan",
-            3: "Os Conspiradores da Máscara", 4: "Os Segredos de Milady",
-            5: "Os Bravos de Porthos", 6: "Os Eruditos de Athos"
-        };
+        let html = "<table><tr><th>Equipa</th><th>Total</th><th>Distribuição por Escalão</th><th>Elementos</th></tr>";
+        for(let id=1; id<=6; id++) {
+            const m = lista.filter(j => j.equipa == id);
+            
+            // Contagem individual por secção
+            const lob = m.filter(j => j.escalao === 'Lobitos').length;
+            const exp = m.filter(j => j.escalao === 'Exploradores').length;
+            const pio = m.filter(j => j.escalao === 'Pioneiros').length;
+            const cam = m.filter(j => j.escalao === 'Caminheiros').length;
+            const pai = m.filter(j => j.escalao === 'Pais').length;
 
-        let html = "<table border='1' style='width:100%; text-align:center; border-collapse:collapse;'><tr><th>Equipa</th><th>Total</th><th>Distribuição por Escalão</th></tr>";
-        for (let id = 1; id <= 6; id++) {
-            const m = listaJogadores.filter(j => j.equipa == id);
-            html += `<tr><td><strong>${nomesEquipas[id]}</strong></td><td>${m.length} elementos</td><td>${m.map(j => j.escalao[0]).join(', ')}</td></tr>`;
+            html += `<tr>
+                <td><strong>${nomes[id]}</strong></td>
+                <td><strong>${m.length}</strong></td>
+                <td style='font-size:0.9em; color:#555;'>${lob} Lob | ${exp} Exp | ${pio} Pio | ${cam} Cam | ${pai} Pais</td>
+                <td>${m.map(j => `${j.nome} (${j.escalao[0]})`).join(', ')}</td>
+            </tr>`;
         }
         html += "</table>";
         document.getElementById('estatisticas').innerHTML = html;

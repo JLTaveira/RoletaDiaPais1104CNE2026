@@ -2,52 +2,145 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Investigação em Versalhes: O Homem da Máscara de Ferro</title>
+    <title>Versalhes - Dashboard de Pontuação</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Georgia', serif; background-color: #050b14; color: #e0e1dd; overflow: hidden; }
-        
-        /* Contentor comum para alinhar tudo ao centro */
-        .fullscreen-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: rgba(5, 11, 20, 0.85); padding: 20px; z-index: 2; }
-
-        /* Fundo da Roleta (Ecrã Inteiro) */
-        #fundo-roleta { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; z-index: 1; transition: background-image 0.1s ease-in-out; display: none; }
-
-        h1 { font-size: 3em; text-shadow: 0 3px 10px rgba(0,0,0,0.8); margin-bottom: 10px; color: #e5ba73; }
-        p { font-size: 1.5em; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
-
-        #btn-jogar { background: #e5ba73; color: #0d1b2a; border: none; padding: 25px 50px; font-size: 1.5em; font-weight: bold; cursor: pointer; box-shadow: 0 5px 25px rgba(0,0,0,0.6); transition: 0.3s; border: 2px solid #fff; }
-        #btn-jogar:hover { background: #c5a059; transform: scale(1.05); }
-
-        /* Caixa de Mensagem Final */
-        #caixa-resultado { background: rgba(13, 27, 42, 0.9); border: 3px solid #e5ba73; padding: 40px; max-width: 800px; box-shadow: 0 0 30px rgba(0,0,0,0.8); display: none; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        #caixa-resultado h2 { font-size: 2.8em; margin: 0 0 20px 0; color: #e5ba73; }
-        #caixa-resultado p { font-size: 1.4em; line-height: 1.5; margin: 0; }
-
-        @keyframes popIn { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        body { font-family: 'Georgia', serif; background: #050b14; color: #e0e1dd; text-align: center; margin: 0; padding: 20px; }
+        h1 { color: #e5ba73; font-size: 2.3em; margin-bottom: 5px; }
+        .grid-dashboard { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; max-width: 1400px; margin: 20px auto; height: 75vh; }
+        .card { background: rgba(13, 27, 42, 0.8); border: 2px solid #e5ba73; border-radius: 8px; padding: 20px; }
+        #lista-ultimas { text-align: left; font-size: 1em; list-style-type: none; padding: 0; }
+        #lista-ultimas li { padding: 8px; border-bottom: 1px solid #1b263b; }
     </style>
 </head>
 <body>
 
-    <div id="fundo-roleta"></div>
-
-    <div id="ecran-inicial" class="fullscreen-container">
-        <h1>Investigação em Versalhes</h1>
-        <p>Aproxima-te, Mosqueteiro... Pressiona o botão para receberes a tua ordem de missão.</p>
-        <button id="btn-jogar" onclick="iniciarSorteio()">RETIRAR ORDEM DE MISSÃO</button>
-    </div>
-
-    <div id="ecran-roleta" class="fullscreen-container" style="display: none; background: rgba(5,11,20,0.5);">
-        <h1 style="font-size: 3.5em; letter-spacing: 2px; animation: pulse 1s infinite alternate;">A FILTRAR DESTINOS...</h1>
-    </div>
-
-    <div id="ecran-resultado" class="fullscreen-container" style="display: none; background: rgba(5,11,20,0.3);">
-        <div id="caixa-resultado">
-            <h2 id="titulo-equipa">Parabéns!</h2>
-            <p id="msg-equipa"></p>
+    <h1>PAINEL DE VERSALHES: CONQUISTA DAS PEÇAS DO PUZZLE GLOBAL</h1>
+        <p style="font-size:1.2em; color:#e5ba73; margin:0;">Meta Coletiva: 100 Peças Totais do Puzzle</p>
+    
+        <div class="grid-dashboard">
+            <div class="card" style="position: relative; height: 100%;">
+                <!-- O GRÁFICO AGORA MOSTRA PEÇAS GANHAS -->
+                <canvas id="graficoPecas"></canvas>
+        </div>
+        
+        <div class="card">
+            <h2 style="color: #e5ba73; margin-top: 0;">Placar Detalhado (Peças)</h2>
+            <div id="tabela-pecas-detalhe" style="text-align:left; font-size:1.1em; line-height:1.8;"></div>
+            <hr style="border-color:#e5ba73;">
+            <h3 style="color: #e5ba73; margin-top: 10px;">Últimos Movimentos</h3>
+            <ul id="lista-ultimas"><li>A aguardar missões...</li></ul>
         </div>
     </div>
 
-    <script src="script.js"></script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+    // ⚠️ COLA AQUI O TEU FIREBASE CONFIG REAL
+    const firebaseConfig = {
+        apiKey: "AIzaSyDPmHr8hlA5GAIfZP76GjDjeZX1as51v4Y",
+        authDomain: "roletadiapais1104cne2026.firebaseapp.com",
+        databaseURL: "https://roletadiapais1104cne2026-default-rtdb.europe-west1.firebasedatabase.app",	
+        projectId: "roletadiapais1104cne2026",
+        storageBucket: "roletadiapais1104cne2026.firebasestorage.app",
+        messagingSenderId: "272378639090",
+        appId: "1:272378639090:web:06755b635971c1cdb4966b" 
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+ const PUZZLE_TOTAL_PECAS = 100; // 🧩 AJUSTA AQUI O NÚMERO TOTAL DE PEÇAS DO TEU PUZZLE REAL
+
+    const ctx = document.getElementById('graficoPecas').getContext('2d');
+    const grafico = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ["Aramis 📜", "d'Artagnan ⚔️", "Máscara 🎭", "Milady 💎", "Porthos 🍷", "Athos ⚜️"],
+            datasets: [{
+                label: 'Peças de Puzzle Conquistadas',
+                data: [0, 0, 0, 0, 0, 0],
+                backgroundColor: ['#2a6f97', '#014f86', '#4a5759', '#6f2dbd', '#a71e34', '#d4af37'],
+                borderColor: '#e5ba73',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { color: '#e0e1dd' } }, x: { ticks: { color: '#e0e1dd', font: { weight: 'bold' } } } }
+        }
+    });
+
+    // Escuta simultânea de Pontos de QR Code e Peças de Bónus do Backoffice
+    let pontosGlobais = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 };
+    let bonusGlobais = { intermedio: {}, final: {} };
+
+    function recalcularEAtualizarEcra() {
+        // 1. Somar todas as peças atribuídas manualmente pelo Chefe no Backoffice
+        let totalPecasBonusEntregues = 0;
+        let pecasBonusPorEquipa = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 };
+
+        for(let eq=1; eq<=6; eq++) {
+            let bIntermedio = bonusGlobais.intermedio[eq] || 0;
+            let bFinal = bonusGlobais.final[eq] || 0;
+            pecasBonusPorEquipa[eq] = bIntermedio + bFinal;
+            totalPecasBonusEntregues += pecasBonusPorEquipa[eq];
+        }
+
+        // 2. Calcular quantas peças restam para serem divididas proporcionalmente pelos QR codes
+        let pecasDisponiveisParaProporcao = PUZZLE_TOTAL_PECAS - totalPecasBonusEntregues;
+
+        // 3. Somar todos os pontos brutos feitos na floresta para criar a escala de proporção
+        let totalPontosQRCodes = Object.values(pontosGlobais).reduce((a, b) => a + b, 0);
+
+        let pecasFinaisCalculadas = [0, 0, 0, 0, 0, 0];
+        let txtDetalhe = "";
+        const nomes = ["Aramis", "d'Artagnan", "Máscara", "Milady", "Porthos", "Athos"];
+
+        for (let i = 0; i < 6; i++) {
+            const eqId = i + 1;
+            let pecasDoQrCode = 0;
+
+            // Evitar divisão por zero caso ninguém tenha respondido a nenhum QR Code ainda
+            if (totalPontosQRCodes > 0) {
+                pecasDoQrCode = (pontosGlobais[eqId] / totalPontosQRCodes) * pecasDisponiveisParaProporcao;
+            }
+
+            // O total de peças da equipa é a soma da sua fatia proporcional + os bónus de backoffice
+            let totalPecasArredondado = Math.round(pecasDoQrCode + pecasBonusPorEquipa[eqId]);
+            pecasFinaisCalculadas[i] = totalPecasArredondado;
+
+            txtDetalhe += `• <strong>${nomes[i]}:</strong> ${totalPecasArredondado} Peças <span style='font-size:0.8em; color:#aaa;'>(De Base: ${pecasBonusPorEquipa[eqId]} | Floresta: ${Math.round(pecasDoQrCode)})</span><br>`;
+        }
+
+        // Atualizar o Gráfico de Barras
+        grafico.data.datasets[0].data = pecasFinaisCalculadas;
+        grafico.update();
+
+        // Atualizar a caixa de texto lateral
+        document.getElementById('tabela-pecas-detalhe').innerHTML = txtCorner + txtDetalhe;
+    }
+
+    onValue(ref(db, 'pontosEquipas'), (snapshot) => {
+        pontosGlobais = snapshot.val() || { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 };
+        recalcularEAtualizarEcra();
+    });
+
+    onValue(ref(db, 'pecasBonus'), (snapshot) => {
+        bonusGlobais = snapshot.val() || { intermedio: {}, final: {} };
+        if(!bonusGlobais.intermedio) bonusGlobais.intermedio = {};
+        if(!bonusGlobais.final) bonusGlobais.final = {};
+        recalcularEAtualizarEcra();
+    });
+
+    onValue(ref(db, 'historicoRespostas'), (snapshot) => {
+        const dados = snapshot.val(); if(!dados) return;
+        const lista = document.getElementById('lista-ultimas'); lista.innerHTML = "";
+        Object.values(dados).reverse().slice(0, 5).forEach(log => {
+            lista.innerHTML += `<li>Eq. ${log.equipa} decifrou Posto ${log.posto}</li>`;
+        });
+    });
+</script>
 </body>
 </html>
