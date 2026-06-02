@@ -22,7 +22,7 @@
         <h2 id="num-posto" style="color: #e5ba73; margin-top: 0;">POSTO DE MISSÃO</h2>
         
         <p style="margin-bottom: 5px; letter-spacing: 1px;">BÓNUS DE VELOCIDADE DISPONÍVEL:</p>
-        <div id="cronometro" class="relogio">50</div>
+        <div id="cronometro" class="relogio">100</div>
         
         <div id="bloco-pergunta" class="enigma">A carregar enigma do manuscrito...</div>
 
@@ -30,12 +30,12 @@
         
         <label>Selecione a vossa Equipa:</label>
         <select id="equipa-sel">
-            <option value="1">1 - Os Mosqueteiros de Aramis</option>
-            <option value="2">2 - A Guarda Real de d'Artagnan</option>
-            <option value="3">3 - Os Conspiradores da Máscara</option>
-            <option value="4">4 - Os Segredos de Milady</option>
-            <option value="5">5 - Os Bravos de Porthos</option>
-            <option value="6">6 - Os Eruditos de Athos</option>
+            <option value="1">Aramis 📜</option>
+            <option value="2">Porthos 🍷</option>
+            <option value="3">Athos ⚜️</option>
+            <option value="4">Treville 🏛️</option>
+            <option value="5">D'Artagnan ⚔️</option>
+            <option value="6">Planchet 🐴</option>
         </select>
 
         <label>Código Secreto da Equipa (Password):</label>
@@ -66,12 +66,12 @@
 
     // Configurações do Jogo
     const senhasEquipas = {
-        1: "aramis77",
-        2: "dartagnan",
-        3: "ferro",
-        4: "milady",
-        5: "porthos",
-        6: "athos" 
+        1: "bispo",
+        2: "taberna",
+        3: "nobre",
+        4: "capitao",
+        5: "espada",
+        6: "fiel" 
     };
     
     // Rotas permitidas (Quais os 4 postos que cada equipa pode fazer)
@@ -100,8 +100,8 @@
     document.getElementById('num-posto').innerText = `POSTO DE MISSÃO Nº ${idPosto}`;
     document.getElementById('bloco-pergunta').innerText = enigmas[idPosto].q;
 
-    // Relógio Decrescente (50 até 10)
-    let pontosAtuais = 50;
+    // Relógio Decrescente (100 até 10)
+    let pontosAtuais = 100;
     const temporizador = setInterval(() => {
         if (pontosAtuais > 10) {
             pontosAtuais--;

@@ -10,7 +10,7 @@
         h2, h3 { color: #1b4332; }
         label, select, input { display: block; width: 100%; margin-bottom: 15px; padding: 10px; font-size: 1em; box-sizing: border-box; }
         button { background: #2d6a4f; color: white; border: none; padding: 15px; width: 100%; font-size: 1.1em; cursor: pointer; border-radius: 5px; margin-bottom: 5px; }
-        button:disabled { background: #6c757d; cursor: not-allowed; }
+        button:disabled { background: #6c757d; cursor: not-allowed; opacity: 0.6; }
         .btn-bonus { background: #d4af37; color: #0d1b2a; font-weight: bold; width: auto; display: inline-block; padding: 10px 20px; margin-right: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95em; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
@@ -37,52 +37,58 @@
 
     <label>Bloquear Equipas:</label>
     <div class="checkbox-group">
-        <label><input type="checkbox" value="1" class="bloqueio"> 1 (Aramis)</label>
-        <label><input type="checkbox" value="2" class="bloqueio"> 2 (d'Artagnan)</label>
-        <label><input type="checkbox" value="3" class="bloqueio"> 3 (Máscara)</label>
-        <label><input type="checkbox" value="4" class="bloqueio"> 4 (Milady)</label>
-        <label><input type="checkbox" value="5" class="bloqueio"> 5 (Porthos)</label>
-        <label><input type="checkbox" value="6" class="bloqueio"> 6 (Athos)</label>
+        <label><input type="checkbox" value="1" class="bloqueio"> 1 (Aramis 📜)</label>
+        <label><input type="checkbox" value="2" class="bloqueio"> 2 (Porthos 🍷)</label>
+        <label><input type="checkbox" value="3" class="bloqueio"> 3 (Athos ⚜️)</label>
+        <label><input type="checkbox" value="4" class="bloqueio"> 4 (Treville 🏛️)</label>
+        <label><input type="checkbox" value="5" class="bloqueio"> 5 (D'Artagnan ⚔️)</label>
+        <label><input type="checkbox" value="6" class="bloqueio"> 6 (Planchet 🐴)</label>
     </div>
     <button id="btn-autorizar" onclick="liberarSorteio()">PREPARAR E ENVIAR PARA A ROLETA</button>
     <button onclick="resetEmergencia()" style="background: #000; font-size: 0.85em;">🔴 RESET DE EMERGÊNCIA DA ROLETA</button>
 
     <hr>
 
-    <!-- 🧩 SECÇÃO ATUALIZADA: LANÇAR PEÇAS DE BÓNUS PRESENCIAIS -->
     <h3>Lançar Peças de Bónus (Jogos Presenciais)</h3>
     
-    <!-- JOGOS INTERMÉDIOS COM CHECKBOXES LIMITADAS A 3 -->
     <div class="flex-row">
         <div style="flex: 1;">
             <strong>Jogos Intermédios (Atribuir +5 Peças):</strong><br>
-            <small>Selecione as 3 equipas vencedoras (Máximo 3)</small>
+            <small>Selecione o jogo e as 3 equipas vencedoras</small>
+            
+            <select id="num-jogo-intermedio" style="margin-top: 10px; padding: 5px; width: 90%;">
+                <option value="jogo1">Jogo Intermédio 1 (15 Peças)</option>
+                <option value="jogo2">Jogo Intermédio 2 (15 Peças)</option>
+            </select>
         </div>
         <div style="flex: 1.5;">
             <div class="checkbox-group">
-                <label><input type="checkbox" value="1" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 1</label>
-                <label><input type="checkbox" value="2" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 2</label>
-                <label><input type="checkbox" value="3" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 3</label>
-                <label><input type="checkbox" value="4" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 4</label>
-                <label><input type="checkbox" value="5" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 5</label>
-                <label><input type="checkbox" value="6" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 6</label>
+                <label><input type="checkbox" value="1" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 1 (Aramis 📜)</label>
+                <label><input type="checkbox" value="2" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 2 (Porthos 🍷)</label>
+                <label><input type="checkbox" value="3" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 3 (Athos ⚜️)</label>
+                <label><input type="checkbox" value="4" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 4 (Treville 🏛️)</label>
+                <label><input type="checkbox" value="5" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 5 (D'Artagnan ⚔️)</label>
+                <label><input type="checkbox" value="6" class="vencedores-intermedio" onchange="validarLimiteIntermedios(this)"> 6 (Planchet 🐴)</label>
             </div>
-            <button class="btn-bonus" style="width:100%; margin-top:5px;" onclick="lancarIntermediosEmLote()">Gravar Vencedores Intermédios</button>
+            <button class="btn-bonus" style="width:100%; margin-top:5px;" onclick="lancarIntermediosEmLote()">Gravar Vencedores</button>
         </div>
     </div>
 
-    <!-- GRANDE JOGO FINAL COM ATRIBUIÇÃO E ATUALIZAÇÃO IMEDIATA -->
     <div class="flex-row" style="border-left-color: #a71e34;">
         <div style="flex: 1;">
-            <strong>Grande Jogo Final (Atribuir +10 Peças):</strong><br>
-            <small>Apenas 1 única equipa ganha este bónus supremo</small>
+            <strong>Grande Jogo Final (Atribuir +30 Peças):</strong><br>
+            <small style="color: #a71e34; font-weight: bold;" id="aviso-bloqueio-final">⚠️ Bloqueado: Requer lançar Jogo Intermédio 1 e 2 primeiro!</small>
         </div>
         <div style="flex: 1.5; display: flex; gap: 10px; align-items: center;">
-            <select id="equipa-final" style="margin:0; flex: 1;">
-                <option value="1">Equipa 1 (Aramis)</option><option value="2">Equipa 2 (d'Artagnan)</option><option value="3">Equipa 3 (Máscara)</option>
-                <option value="4">Equipa 4 (Milady)</option><option value="5">Equipa 5 (Porthos)</option><option value="6">Equipa 6 (Athos)</option>
+            <select id="equipa-final" style="margin:0; flex: 1;" disabled>
+                <option value="1">Equipa 1 (Aramis 📜)</option>
+                <option value="2">Equipa 2 (Porthos 🍷)</option>
+                <option value="3">Equipa 3 (Athos ⚜️)</option>
+                <option value="4">Equipa 4 (Treville 🏛️)</option>
+                <option value="5">Equipa 5 (D'Artagnan ⚔️)</option>
+                <option value="6">Equipa 6 (Planchet 🐴)</option>
             </select>
-            <button class="btn-bonus" style="background:#a71e34; color:white; margin:0;" onclick="atribuirPecasFinal(10)">Atribuir +10 Peças ➔</button>
+            <button id="btn-jogo-final" class="btn-bonus" style="background:#a71e34; color:white; margin:0;" onclick="atribuirPecasFinal(30)" disabled>Atribuir +30 Peças ➔</button>
         </div>
     </div>
 
@@ -95,7 +101,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-    // ⚠️ COLA AQUI O TEU FIREBASE CONFIG REAL
     const firebaseConfig = {
         apiKey: "AIzaSyDPmHr8hlA5GAIfZP76GjDjeZX1as51v4Y",
         authDomain: "roletadiapais1104cne2026.firebaseapp.com",
@@ -108,53 +113,109 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Prompt Simples de Login
     if (prompt("Código de Acesso:") === "Alerta#Servir1104") {
         document.getElementById('painel-protegido').style.display = 'block';
     } else {
         document.body.innerHTML = "<h1>Não autorizado.</h1>";
     }
 
-    // Limitação Interativa: Impede o utilizador de marcar mais do que 3 caixas
     window.validarLimiteIntermedios = function(checkbox) {
         const marcados = document.querySelectorAll('.vencedores-intermedio:checked');
         if (marcados.length > 3) {
-            alert("⚠️ Seleção inválida! Só pode escolher um máximo de 3 equipas vencedoras para os Jogos Intermédios.");
+            alert("⚠️ Seleção inválida! Só pode escolher um máximo de 3 equipas vencedoras para este Jogo Intermédio.");
             checkbox.checked = false;
         }
     }
 
-    // Gravação simultânea das 3 equipas dos Jogos Intermédios
     window.lancarIntermediosEmLote = async function() {
         const checkboxes = document.querySelectorAll('.vencedores-intermedio:checked');
+        const jogoSelecionado = document.getElementById('num-jogo-intermedio').value;
+        const nomeJogoAmigavel = jogoSelecionado === 'jogo1' ? "Jogo Intermédio 1" : "Jogo Intermédio 2";
+
         if (checkboxes.length !== 3) {
-            alert("⚠️ Por favor, selecione exatamente as 3 equipas vencedoras antes de submeter.");
+            alert(`⚠️ Por favor, selecione exatamente as 3 equipas vencedoras para o ${nomeJogoAmigavel} antes de submeter.`);
             return;
         }
 
         const equipasVencedoras = Array.from(checkboxes).map(cb => cb.value);
-        
-        // Reset completo prévio do nó intermédio para evitar acumulações antigas erradas
-        let novoNoIntermedio = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-        equipasVencedoras.forEach(eq => {
-            novoNoIntermedio[eq] = 5;
-        });
+        let novoNoJogo = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+        equipasVencedoras.forEach(eq => { novoNoJogo[eq] = 5; });
 
-        await set(ref(db, 'pecasBonus/intermedio'), novoNoIntermedio);
-        alert("✓ Sucesso! As 3 equipas selecionadas receberam +5 peças cada uma no painel geral.");
+        await set(ref(db, `pecasBonus/intermedio/${jogoSelecionado}`), novoNoJogo);
+        checkboxes.forEach(cb => cb.checked = false);
+        alert(`✓ Sucesso! As 3 equipas selecionadas receberam +5 peças cada uma no ${nomeJogoAmigavel}.`);
     }
 
-    // Atribuição Direta do Jogo Final com atualização imediata no painel
+    // Atribuição Direta do Jogo Final e Encerramento Oficial do Jogo
     window.atribuirPecasFinal = async function(quantidade) {
+        if (!confirm("⚠️ ATENÇÃO: Atribuir os pontos do Jogo Final vai ENCERRAR o jogo definitivamente. Não serão permitidas mais alterações ou pontos dos QR Codes. Desejas continuar?")) {
+            return;
+        }
+
         const equipa = document.getElementById('equipa-final').value;
         
-        // Limpa qualquer vencedor final anterior e atribui exclusivamente 10 pontos à nova campeã
         let novoNoFinal = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
         novoNoFinal[equipa] = quantidade;
 
+        // 1. Grava o vencedor do jogo final
         await set(ref(db, 'pecasBonus/final'), novoNoFinal);
-        alert(`🏆 Vitória confirmada! A Equipa ${equipa} recebeu +10 peças de bónus do Jogo Final.`);
+        
+        // 2. Grava a tranca definitiva de Fim de Jogo na BD
+        await set(ref(db, 'fimDoJogo'), true);
+        
+        alert(`🏆 JOGO ENCERRADO! Vitória confirmada para a Equipa ${equipa}. O Placar Geral foi congelado.`);
     }
+    // Monitorização em tempo real para ativar/desativar o botão do Jogo Final
+    onValue(ref(db, 'pecasBonus/intermedio'), (snapshot) => {
+        const dados = snapshot.val();
+        const temJogo1 = dados && dados.jogo1;
+        const temJogo2 = dados && dados.jogo2;
+
+        const selectFinal = document.getElementById('equipa-final');
+        const btnFinal = document.getElementById('btn-jogo-final');
+        const aviso = document.getElementById('aviso-bloqueio-final');
+
+        if (temJogo1 && temJogo2) {
+            selectFinal.disabled = false;
+            btnFinal.disabled = false;
+            aviso.innerText = "🔓 Desbloqueado: Pronto a atribuir!";
+            aviso.style.color = "#2d6a4f";
+        } else {
+            selectFinal.disabled = true;
+            btnFinal.disabled = true;
+            aviso.innerText = "⚠️ Bloqueado: Requer lançar Jogo Intermédio 1 e 2 primeiro!";
+            aviso.style.color = "#a71e34";
+        }
+    });
+
+    onValue(ref(db, 'fimDoJogo'), (snapshot) => {
+        if (snapshot.val() === true) {
+            document.getElementById('btn-autorizar').disabled = true;
+            document.getElementById('btn-autorizar').innerText = "🔒 JOGO ENCERRADO DEFINITIVAMENTE";
+            
+            const btnFinal = document.getElementById('btn-jogo-final');
+            if (btnFinal) {
+                btnFinal.disabled = true;
+                btnFinal.innerText = "🔒 Finalizado";
+            }
+            
+            // Tranca todos os restantes botões, inputs e selects da página para ninguém fazer asneiras
+            document.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
+        }
+    });
+
+    onValue(ref(db, 'statusSorteio/estado'), (snapshot) => {
+        // Se o jogo já acabou, não vale a pena validar o estado da roleta
+        get(ref(db, 'fimDoJogo')).then((fimSnap) => {
+            if (fimSnap.val() === true) return;
+
+            const est = snapshot.val();
+            const btn = document.getElementById('btn-autorizar');
+            btn.disabled = (est === "AUTORIZADO" || est === "A_RODAR");
+            if(btn.disabled) btn.innerText = "⏳ Participante a rodar a roleta...";
+            else btn.innerText = "PREPARAR E ENVIAR PARA A ROLETA";
+        });
+    });
 
     window.liberarSorteio = function() {
         const nome = document.getElementById('nomeParticipante').value.trim();
@@ -174,6 +235,8 @@
         checkboxes.forEach(cb => cb.checked = false);
     }
 
+    window.resetEmergencia = function() { set(ref(db, 'statusSorteio'), { estado: "DISPONIVEL", jogador: null }); }
+
     onValue(ref(db, 'statusSorteio/estado'), (snapshot) => {
         const est = snapshot.val();
         const btn = document.getElementById('btn-autorizar');
@@ -185,13 +248,18 @@
     onValue(ref(db, 'jogadores'), (snapshot) => {
         const dados = snapshot.val() || {};
         const lista = Object.values(dados);
-        const nomes = {1:"Aramis", 2:"d'Artagnan", 3:"Máscara", 4:"Milady", 5:"Porthos", 6:"Athos"};
+        const nomes = { 
+            1:"Aramis 📜", 
+            2:"Porthos 🍷", 
+            3:"Athos ⚜️", 
+            4:"Treville 🏛️", 
+            5:"D'Artagnan ⚔️", 
+            6:"Planchet 🐴" 
+        };
         
         let html = "<table><tr><th>Equipa</th><th>Total</th><th>Distribuição por Escalão</th><th>Elementos</th></tr>";
         for(let id=1; id<=6; id++) {
             const m = lista.filter(j => j.equipa == id);
-            
-            // Contagem individual por secção
             const lob = m.filter(j => j.escalao === 'Lobitos').length;
             const exp = m.filter(j => j.escalao === 'Exploradores').length;
             const pio = m.filter(j => j.escalao === 'Pioneiros').length;
@@ -205,8 +273,7 @@
                 <td>${m.map(j => `${j.nome} (${j.escalao[0]})`).join(', ')}</td>
             </tr>`;
         }
-        html += "</table>";
-        document.getElementById('estatisticas').innerHTML = html;
+        document.getElementById('estatisticas').innerHTML = html + "</table>";
     });
 </script>
 </body>

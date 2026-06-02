@@ -95,21 +95,26 @@
 </head>
 <body>
 
-    <h1>BATALHA DOS MOSQUETEIROS</h1>
-        <p style="font-size:1.2em; color:#e5ba73; margin:0;">Ter o maior número de Peças do Puzzle</p>
+    <header style="padding: 5px 0;">
+        <h1>Batalha dos Mosqueteiros</h1>
+        <p style="font-size:1.1em; color:#e5ba73; margin:0; font-weight:bold;">Ganhar o mais número de peças do Puzzle</p>
+    </header>
     
-        <div class="grid-dashboard">
-            <div class="card" style="position: relative; height: 100%;">
-                <!-- O GRÁFICO AGORA MOSTRA PEÇAS GANHAS -->
-                <canvas id="graficoPecas"></canvas>
+    <div class="grid-dashboard">
+        <div class="card card-grafico">
+            <canvas id="graficoPecas"></canvas>
         </div>
         
-        <div class="card">
-            <h2 style="color: #e5ba73; margin-top: 0;">Placar Detalhado (Peças)</h2>
-            <div id="tabela-pecas-detalhe" style="text-align:left; font-size:1.1em; line-height:1.8;"></div>
-            <hr style="border-color:#e5ba73;">
-            <h3 style="color: #e5ba73; margin-top: 10px;">Últimos Movimentos</h3>
-            <ul id="lista-ultimas"><li>A aguardar missões...</li></ul>
+        <div class="card card-placar">
+            <div>
+                <h2>Peças do Puzzle</h2>
+                <div id="tabela-pecas-detalhe">A calcular proporções...</div>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <h3 id="titulo-dinamico-lateral">Jogos</h3>
+                <ul id="lista-ultimas"><li>A aguardar missões...</li></ul>
+            </div>
         </div>
     </div>
 
@@ -130,17 +135,19 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
- const PUZZLE_TOTAL_PECAS = 80; // 🧩 AJUSTA AQUI O NÚMERO TOTAL DE PEÇAS DO TEU PUZZLE REAL
+// 🧩 160 Peças: 60 dos Jogos Físicos (15+15+30) + 100 Proporcionais dos QR Codes
+    const PUZZLE_TOTAL_PECAS = 160; 
+    const NOMES_EQUIPAS = ["Aramis", "Porthos", "Athos", "Treville", "D'Artagnan", "Planchet"];
 
     const ctx = document.getElementById('graficoPecas').getContext('2d');
     const grafico = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ["Aramis 📜", "d'Artagnan ⚔️", "Máscara 🎭", "Milady 💎", "Porthos 🍷", "Athos ⚜️"],
+            labels: ["Aramis 📜", "Porthos 🍷", "Athos ⚜️", "Treville 🏛️", "D'Artagnan ⚔️", "Planchet 🐴"],
             datasets: [{
-                label: 'Peças de Puzzle Conquistadas',
+                label: 'Peças Conquistadas',
                 data: [0, 0, 0, 0, 0, 0],
-                backgroundColor: ['#2a6f97', '#014f86', '#4a5759', '#6f2dbd', '#a71e34', '#d4af37'],
+                backgroundColor: ['#2a6f97', '#a71e34', '#4a5759', '#6f2dbd', '#014f86', '#d4af37'],
                 borderColor: '#e5ba73',
                 borderWidth: 2
             }]
@@ -148,59 +155,93 @@
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { color: '#e0e1dd' } }, x: { ticks: { color: '#e0e1dd', font: { weight: 'bold' } } } }
+            scales: { 
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#e0e1dd' } }, 
+                x: { ticks: { color: '#e0e1dd', font: { weight: 'bold', size: 12 } } } 
+            }
         }
     });
 
-    // Escuta simultânea de Pontos de QR Code e Peças de Bónus do Backoffice
     let pontosGlobais = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 };
     let bonusGlobais = { intermedio: {}, final: {} };
+    let listaLogsHistorico = [];
 
     function recalcularEAtualizarEcra() {
-        // 1. Somar todas as peças atribuídas manualmente pelo Chefe no Backoffice
         let totalPecasBonusEntregues = 0;
         let pecasBonusPorEquipa = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 };
 
+        // Processamento das peças de bónus presenciais fixas
         for(let eq=1; eq<=6; eq++) {
-            let bIntermedio = bonusGlobais.intermedio[eq] || 0;
-            let bFinal = bonusGlobais.final[eq] || 0;
-            pecasBonusPorEquipa[eq] = bIntermedio + bFinal;
+            let bIntermedio1 = (bonusGlobais.intermedio && bonusGlobais.intermedio.jogo1) ? (bonusGlobais.intermedio.jogo1[eq] || 0) : 0;
+            let bIntermedio2 = (bonusGlobais.intermedio && bonusGlobais.intermedio.jogo2) ? (bonusGlobais.intermedio.jogo2[eq] || 0) : 0;
+            let bFinal = (bonusGlobais.final) ? (bonusGlobais.final[eq] || 0) : 0;
+            
+            pecasBonusPorEquipa[eq] = bIntermedio1 + bIntermedio2 + bFinal;
             totalPecasBonusEntregues += pecasBonusPorEquipa[eq];
         }
 
-        // 2. Calcular quantas peças restam para serem divididas proporcionalmente pelos QR codes
+        // As restantes peças (até perfazer as 100 da floresta + as que sobrarem) entram na proporção
         let pecasDisponiveisParaProporcao = PUZZLE_TOTAL_PECAS - totalPecasBonusEntregues;
-
-        // 3. Somar todos os pontos brutos feitos na floresta para criar a escala de proporção
         let totalPontosQRCodes = Object.values(pontosGlobais).reduce((a, b) => a + b, 0);
 
         let pecasFinaisCalculadas = [0, 0, 0, 0, 0, 0];
         let txtDetalhe = "";
-        const nomes = ["Aramis", "d'Artagnan", "Máscara", "Milady", "Porthos", "Athos"];
 
         for (let i = 0; i < 6; i++) {
             const eqId = i + 1;
             let pecasDoQrCode = 0;
 
-            // Evitar divisão por zero caso ninguém tenha respondido a nenhum QR Code ainda
             if (totalPontosQRCodes > 0) {
                 pecasDoQrCode = (pontosGlobais[eqId] / totalPontosQRCodes) * pecasDisponiveisParaProporcao;
             }
 
-            // O total de peças da equipa é a soma da sua fatia proporcional + os bónus de backoffice
             let totalPecasArredondado = Math.round(pecasDoQrCode + pecasBonusPorEquipa[eqId]);
             pecasFinaisCalculadas[i] = totalPecasArredondado;
 
-            txtDetalhe += `• <strong>${nomes[i]}:</strong> ${totalPecasArredondado} Peças <span style='font-size:0.8em; color:#aaa;'>(De Base: ${pecasBonusPorEquipa[eqId]} | Floresta: ${Math.round(pecasDoQrCode)})</span><br>`;
+            txtDetalhe += `• <strong>${NOMES_EQUIPAS[i]}:</strong> ${totalPecasArredondado} Peças <span style='font-size:0.75em; color:#888;'>(Bónus: ${pecasBonusPorEquipa[eqId]} | Rua: ${Math.round(pecasDoQrCode)})</span><br>`;
         }
 
-        // Atualizar o Gráfico de Barras
         grafico.data.datasets[0].data = pecasFinaisCalculadas;
         grafico.update();
+        document.getElementById('tabela-pecas-detalhe').innerHTML = txtDetalhe;
 
-        // Atualizar a caixa de texto lateral
-        document.getElementById('tabela-pecas-detalhe').innerHTML = txtCorner + txtDetalhe;
+        // Regra Dinâmica da Barra Lateral Condicionada ao Jogo Final
+        let existeVencedorFinal = Object.values(bonusGlobais.final || {}).some(v => v > 0);
+        const ulLateral = document.getElementById('lista-ultimas');
+        const h3Lateral = document.getElementById('titulo-dinamico-lateral');
+
+        if (existeVencedorFinal) {
+            h3Lateral.innerText = "🧩 Bónus Presenciais Conquistados";
+            h3Lateral.style.color = "#d4af37";
+            let htmlBonus = "";
+            for (let i = 0; i < 6; i++) {
+                const eqId = i + 1;
+                htmlBonus += `<li class="item-bonus-fixo"><span>${NOMES_EQUIPAS[i]}</span> <span>+${pecasBonusPorEquipa[eqId]} Peças</span></li>`;
+            }
+            ulLateral.innerHTML = htmlBonus;
+        } else {
+            h3Lateral.innerText = "⚡ Últimos Movimentos";
+            h3Lateral.style.color = "#e5ba73";
+            if (listaLogsHistorico.length === 0) {
+                ulLateral.innerHTML = "<li>A aguardar missões...</li>";
+            } else {
+                let htmlLogs = "";
+                listaLogsHistorico.forEach(log => {
+                    htmlLogs += `<li>Equipa ${log.equipa} (${NOMES_EQUIPAS[log.equipa-1]}) decifrou Posto ${log.posto}</li>`;
+                });
+                ulLateral.innerHTML = htmlLogs;
+            }
+        }
     }
+
+    let jogoEncerradoOficialmente = false;
+
+    onValue(ref(db, 'fimDoJogo'), (snapshot) => {
+        if (snapshot.val() === true) {
+            jogoEncerradoOficialmente = true;
+            document.querySelector('h1').innerText = "🏁 CLASSIFICAÇÃO FINAL - JOGO CONCLUÍDO 🏁";
+        }
+    });
 
     onValue(ref(db, 'pontosEquipas'), (snapshot) => {
         pontosGlobais = snapshot.val() || { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 };
@@ -215,11 +256,10 @@
     });
 
     onValue(ref(db, 'historicoRespostas'), (snapshot) => {
-        const dados = snapshot.val(); if(!dados) return;
-        const lista = document.getElementById('lista-ultimas'); lista.innerHTML = "";
-        Object.values(dados).reverse().slice(0, 5).forEach(log => {
-            lista.innerHTML += `<li>Eq. ${log.equipa} decifrou Posto ${log.posto}</li>`;
-        });
+        const dados = snapshot.val(); 
+        if(!dados) { listaLogsHistorico = []; return; }
+        listaLogsHistorico = Object.values(dados).reverse().slice(0, 4);
+        recalcularEAtualizarEcra();
     });
 </script>
 </body>

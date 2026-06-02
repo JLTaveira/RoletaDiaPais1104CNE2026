@@ -3,17 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <title>Investigação em Versalhes: O Homem da Máscara de Ferro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         * { box-sizing: border-box; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Georgia', serif; background-color: #050b14; color: #e0e1dd; overflow: hidden; }
+        
+        /* 🎥 CONFIGURAÇÃO ULTRA-PROJETOR: Garante proporção perfeita em qualquer resolução */
+        #fundo-roleta { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+            background-size: contain; /* Mantém a imagem inteira sem cortes; muda para 'cover' se preferires que preencha as bordas pretas */
+            background-position: center center; 
+            background-repeat: no-repeat;
+            z-index: 1; 
+            transition: background-image 0.05s ease-in-out; 
+            display: none; 
+        }
+        
         .fullscreen-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: rgba(5, 11, 20, 0.85); padding: 20px; z-index: 2; }
-        #fundo-roleta { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; z-index: 1; transition: background-image 0.1s ease-in-out; display: none; }
         h1 { font-size: 3em; text-shadow: 0 3px 10px rgba(0,0,0,0.8); margin-bottom: 10px; color: #e5ba73; }
         p { font-size: 1.5em; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
         #btn-jogar { background: #e5ba73; color: #0d1b2a; border: none; padding: 25px 50px; font-size: 1.5em; font-weight: bold; cursor: pointer; box-shadow: 0 5px 25px rgba(0,0,0,0.6); transition: 0.3s; border: 2px solid #fff; }
         #btn-jogar:hover:not(:disabled) { background: #c5a059; transform: scale(1.05); }
         #btn-jogar:disabled { background: #6c757d; color: #343a40; cursor: not-allowed; opacity: 0.6; border-color: #6c757d; }
-        #caixa-resultado { background: rgba(13, 27, 42, 0.9); border: 3px solid #e5ba73; padding: 40px; max-width: 800px; box-shadow: 0 0 30px rgba(0,0,0,0.8); display: none; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #caixa-resultado { background: rgba(13, 27, 42, 0.95); border: 3px solid #e5ba73; padding: 40px; max-width: 800px; box-shadow: 0 0 30px rgba(0,0,0,0.8); display: none; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         #caixa-resultado h2 { font-size: 2.8em; margin: 0 0 20px 0; color: #e5ba73; }
         #caixa-resultado p { font-size: 1.4em; line-height: 1.5; margin: 0; }
         @keyframes popIn { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -58,13 +74,14 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+// ⚔️ NOMES E ÍCONES ATUALIZADOS EM SINCRONIA COM O TEU BACKOFFICE
     const equipas = {
-        1: { nome: "Os Mosqueteiros de Aramis", imagem: "equipa1.jpg", msg: "Pela honra e pelo manuscrito! Desvendem o segredo de Versalhes antes que o sangue seque na pedra." },
-        2: { nome: "A Guarda Real de d'Artagnan", imagem: "equipa2.jpg", msg: "Lealdade e astúcia! O destino de França está nas vossas mãos. Protejam o segredo do Rei." },
-        3: { nome: "Os Conspiradores da Máscara", imagem: "equipa3.jpg", msg: "Nas sombras mais escuras de Versalhes se esconde a verdade. Libertem o homem da máscara de ferro!" },
-        4: { nome: "Os Segredos de Milady", imagem: "equipa4.jpg", msg: "Intriga, espionagem e passos silenciosos. Ninguém poderá saber que estiveram aqui." },
-        5: { nome: "Os Bravos de Porthos", imagem: "equipa5.jpg", msg: "Força bruta, coragem e companheirismo! Nenhum obstáculo ou parede de Versalhes vos conseguirá travar." },
-        6: { nome: "Os Eruditos de Athos", imagem: "equipa6.jpg", msg: "Sabedoria, precisão e sangue-frio. Sigam o rasto de gotas de sangue sem deixar testemunhas." }
+        1: { nome: "Aramis 📜", imagem: "equipa1.jpg", msg: "Pela honra e pelo manuscrito! Desvendem o segredo de Versalhes antes que o sangue seque na pedra." },
+        2: { nome: "Porthos 🍷", imagem: "equipa2.jpg", msg: "Força bruta, coragem e companheirismo! Nenhum obstáculo ou parede de Versalhes vos conseguirá travar." },
+        3: { nome: "Athos ⚜️", imagem: "equipa3.jpg", msg: "Sabedoria, precisão e sangue-frio. Sigam o rasto de gotas de sangue sem deixar testemunhas." },
+        4: { nome: "Treville 🏛️", imagem: "equipa4.jpg", msg: "Intriga, espionagem e passos silenciosos. Ninguém poderá saber que estiveram aqui." },
+        5: { nome: "D'Artagnan ⚔️", imagem: "equipa5.jpg", msg: "Lealdade e astúcia! O destino de França está nas vossas mãos. Protejam o segredo do Rei." },
+        6: { nome: "Planchet 🐴", imagem: "equipa6.jpg", msg: "Nas sombras mais escuras de Versalhes se esconde a verdade. Libertem o homem da máscara de ferro!" }
     };
 
     let jogadorLocal = null;
@@ -83,7 +100,6 @@
     window.iniciarSorteio = async function() {
         if (!jogadorLocal) return;
 
-        // Atualiza o estado na nuvem imediatamente para travar cliques
         set(ref(db, 'statusSorteio/estado'), "A_RODAR");
 
         const fundo = document.getElementById('fundo-roleta');
@@ -102,8 +118,6 @@
             idx++;
         }, 150);
 
-        // Algoritmo Inteligente de Distribuição Estrita
-        // Garante que a leitura da BD não rebenta se estiver vazia
         const snapJogadores = await get(ref(db, 'jogadores'));
         const jogadoresAtuais = snapJogadores.exists() && snapJogadores.val() ? Object.values(snapJogadores.val()) : [];
 
@@ -117,7 +131,6 @@
             pontuacaoEquipas[id] += mesmoGenero * 3;
         }
 
-        // Filtro protegido contra 'undefined'
         let bloqueadas = jogadorLocal.equipasBloqueadas || [];
         let equipasElegiveis = [1, 2, 3, 4, 5, 6].filter(id => !bloqueadas.includes(id));
         if (equipasElegiveis.length === 0) equipasElegiveis = [1, 2, 3, 4, 5, 6];
@@ -125,40 +138,35 @@
         equipasElegiveis.sort((a, b) => pontuacaoEquipas[a] - pontuacaoEquipas[b]);
         const equipaEscolhidaID = equipasElegiveis[0];
 
-        // Parar obrigatoriamente após 10 segundos exatos
         setTimeout(() => {
             clearInterval(intervaloRoleta);
             
-            // Fixa de forma absoluta a imagem da equipa ganha
             fundo.style.backgroundImage = `url('${equipas[equipaEscolhidaID].imagem}')`;
             
-            // Guarda de facto o jogador com o seu nome na BD
             jogadorLocal.equipa = equipaEscolhidaID;
             push(ref(db, 'jogadores'), jogadorLocal);
 
-            // LIMITAÇÃO DO SORTEIO: Limpa a sala de espera na nuvem imediatamente
             set(ref(db, 'statusSorteio'), { estado: "DISPONIVEL", jogador: null });
 
-            // Apresenta a mensagem por cima da imagem da personagem
             eRoleta.style.display = 'none';
             document.getElementById('titulo-equipa').innerText = `Parabéns, és da Equipa ${equipaEscolhidaID}: ${equipas[equipaEscolhidaID].nome}!`;
             document.getElementById('msg-equipa').innerText = equipas[equipaEscolhidaID].msg;
             eResultado.style.display = 'flex';
             document.getElementById('caixa-resultado').style.display = 'block';
 
-            // Aguarda 10 segundos e reinicia a tela para o próximo jogador
+            // ⏱️ CORRIGIDO: 20000ms (20 segundos) para dar tempo de ler e festejar antes de reiniciar
             setTimeout(() => {
                 eResultado.style.display = 'none';
                 fundo.style.display = 'none';
                 eInicial.style.display = 'flex';
                 jogadorLocal = null;
-            }, 1000);
+            }, 20000);
 
         }, 10000); 
     }
 </script>
 
-<div style="
+    <div style="
         position: fixed; 
         bottom: 15px; 
         right: 15px; 
