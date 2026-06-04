@@ -41,8 +41,8 @@
 
     <div id="ecran-inicial" class="fullscreen-container">
         <h1>Investigação em Versalhes</h1>
-        <p>Aproxima-te, Mosqueteiro... Pressiona o botão para receberes a tua ordem de missão.</p>
-        <button id="btn-jogar" onclick="iniciarSorteio()" disabled>RETIRAR ORDEM DE MISSÃO</button>
+        <p>Aproxima-te, Mosqueteiro... Pressiona o botão e conhece a tua missão.</p>
+        <button id="btn-jogar" onclick="iniciarSorteio()" disabled>MISSÃO</button>
     </div>
 
     <div id="ecran-roleta" class="fullscreen-container" style="display: none; background: rgba(5,11,20,0.5);">
@@ -51,7 +51,7 @@
 
     <div id="ecran-resultado" class="fullscreen-container" style="display: none; background: rgba(5,11,20,0.3);">
         <div id="caixa-resultado">
-            <h2 id="titulo-equipa">Parabéns!</h2>
+            <h2 id="titulo-equipa">Mosqueteiro!</h2>
             <p id="msg-equipa"></p>
         </div>
     </div>
@@ -60,7 +60,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getDatabase, ref, set, get, push, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-    // ⚠️ COLA AQUI AS TUAS CREDENCIAIS DO FIREBASE (AS MESMAS DO ADMIN E DO INDEX)
     const firebaseConfig = {
             apiKey: "AIzaSyDPmHr8hlA5GAIfZP76GjDjeZX1as51v4Y",
             authDomain: "roletadiapais1104cne2026.firebaseapp.com",
@@ -74,7 +73,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-// ⚔️ NOMES E ÍCONES ATUALIZADOS EM SINCRONIA COM O TEU BACKOFFICE
+    // ⚔️ NOMES E ÍCONES ATUALIZADOS EM SINCRONIA COM O BACKOFFICE
     const equipas = {
         1: { nome: "Aramis 📜", imagem: "equipa1.jpg", msg: "Pela honra e pelo manuscrito! Desvendem o segredo de Versalhes antes que o sangue seque na pedra." },
         2: { nome: "Porthos 🍷", imagem: "equipa2.jpg", msg: "Força bruta, coragem e companheirismo! Nenhum obstáculo ou parede de Versalhes vos conseguirá travar." },
@@ -149,18 +148,18 @@
             set(ref(db, 'statusSorteio'), { estado: "DISPONIVEL", jogador: null });
 
             eRoleta.style.display = 'none';
-            document.getElementById('titulo-equipa').innerText = `Parabéns, és da Equipa ${equipaEscolhidaID}: ${equipas[equipaEscolhidaID].nome}!`;
+            document.getElementById('titulo-equipa').innerText = `És da Equipa ${equipaEscolhidaID}: ${equipas[equipaEscolhidaID].nome}!`;
             document.getElementById('msg-equipa').innerText = equipas[equipaEscolhidaID].msg;
             eResultado.style.display = 'flex';
             document.getElementById('caixa-resultado').style.display = 'block';
 
-            // ⏱️ CORRIGIDO: 20000ms (20 segundos) para dar tempo de ler e festejar antes de reiniciar
+            // ⏱️ CORRIGIDO: 15000ms (15 segundos) para dar tempo de ler e festejar antes de reiniciar
             setTimeout(() => {
                 eResultado.style.display = 'none';
                 fundo.style.display = 'none';
                 eInicial.style.display = 'flex';
                 jogadorLocal = null;
-            }, 20000);
+            }, 15000);
 
         }, 10000); 
     }
@@ -190,6 +189,5 @@
             letter-spacing: 0.5px;
         ">ACOMPANHA OS RESULTADOS EM TEMPO REAL</span>
     </div>
-
 </body>
 </html>
