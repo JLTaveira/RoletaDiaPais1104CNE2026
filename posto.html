@@ -9,11 +9,14 @@
         .box { background: #0d1b2a; border: 2px solid #e5ba73; padding: 25px; border-radius: 8px; max-width: 550px; margin: 30px auto; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
         .relogio { font-size: 3.5em; color: #ff4d4d; font-weight: bold; margin: 15px 0; font-family: monospace; }
         .enigma { background: rgba(255,255,255,0.05); padding: 15px; border-left: 4px solid #e5ba73; text-align: left; margin: 20px 0; font-style: italic; line-height: 1.4; }
+        .texto-mensagem { background: #1b263b; padding: 10px; border-radius: 4px; border: 1px dashed #e5ba73; font-family: monospace; font-size: 1.2em; text-align: center; margin: 10px 0; color: #e5ba73; letter-spacing: 2px; }
         select, input, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 4px; border: none; font-size: 1em; box-sizing: border-box; }
-        input[type="text"] { background: #1b263b; color: white; border: 1px solid #e5ba73; text-align: center; font-size: 1.2em; }
+        input[type="text"] { background: #1b263b; color: white; border: 1px solid #e5ba73; text-align: center; font-size: 1.2em; text-transform: uppercase; }
         button { background: #e5ba73; color: #0d1b2a; font-weight: bold; cursor: pointer; font-size: 1.1em; transition: 0.2s; }
         button:hover:not(:disabled) { background: #c5a059; }
         button:disabled { background: #555; color: #aaa; cursor: not-allowed; }
+        .btn-desistir { background: #a71e34; color: white; margin-top: 5px; font-size: 0.95em; }
+        .btn-desistir:hover:not(:disabled) { background: #bd2130; }
     </style>
 </head>
 <body>
@@ -21,50 +24,59 @@
     <div class="box">
         <h2 id="num-posto" style="color: #e5ba73; margin-top: 0;">POSTO DE MISSÃO</h2>
         
-        <p style="margin-bottom: 5px; letter-spacing: 1px;">BÓNUS DE VELOCIDADE DISPONÍVEL:</p>
-        <div id="cronometro" class="relogio">100</div>
+        <p style="margin-bottom: 5px; letter-spacing: 1px;">TEMPO DISPONÍVEL (SEGUNDOS):</p>
+        <div id="cronometro" class="relogio">300</div>
         
         <div id="bloco-pergunta" class="enigma">A carregar enigma do manuscrito...</div>
+        <div id="bloco-mensagem-secreta" class="texto-mensagem">...</div>
 
         <hr style="border-color: #e5ba73; margin: 20px 0;">
         
         <label>Selecione a vossa Equipa:</label>
         <select id="equipa-sel">
-            <option value="1">Aramis 📜</option>
-            <option value="2">Porthos 🍷</option>
-            <option value="3">Athos ⚜️</option>
-            <option value="4">Treville 🏛️</option>
-            <option value="5">D'Artagnan ⚔️</option>
-            <option value="6">Planchet 🐴</option>
+            <option value="1">1 - Aramis 📜</option>
+            <option value="2">2 - Porthos 🍷</option>
+            <option value="3">3 - Athos ⚜️</option>
+            <option value="4">4 - Treville 🏛️</option>
+            <option value="5">5 - D'Artagnan ⚔️</option>
+            <option value="6">6 - Planchet 🐴</option>
         </select>
 
         <label>Código Secreto da Equipa (Password):</label>
         <input type="password" id="pass-equipa" placeholder="Senha da Equipa">
 
-        <label>Resposta ao Enigma (Apenas 1 palavra):</label>
+        <label>Resposta ao Enigma:</label>
         <input type="text" id="resposta-enigma" placeholder="Escreva aqui a resposta...">
 
         <button id="btn-validar" onclick="validarEEnviar()">DECIFRAR E ENVIAR MENSAGEM</button>
+        <button id="btn-desistir" class="btn-desistir" onclick="desistirDoPosto()">🏳️ DESISTIR DESTE ENIGMA (0 PONTOS)</button>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getDatabase, ref, set, get, push } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-    // ⚠️ COLA AQUI O TEU FIREBASE CONFIG REAL
     const firebaseConfig = {
-                apiKey: "AIzaSyDPmHr8hlA5GAIfZP76GjDjeZX1as51v4Y",
-                authDomain: "roletadiapais1104cne2026.firebaseapp.com",
-                databaseURL: "https://roletadiapais1104cne2026-default-rtdb.europe-west1.firebasedatabase.app",	
-                projectId: "roletadiapais1104cne2026",
-                storageBucket: "roletadiapais1104cne2026.firebasestorage.app",
-                messagingSenderId: "272378639090",
-                appId: "1:272378639090:web:06755b635971c1cdb4966b"
-            };
+        apiKey: "AIzaSyDPmHr8hlA5GAIfZP76GjDjeZX1as51v4Y",
+        authDomain: "roletadiapais1104cne2026.firebaseapp.com",
+        databaseURL: "https://roletadiapais1104cne2026-default-rtdb.europe-west1.firebasedatabase.app", 
+        projectId: "roletadiapais1104cne2026",
+        storageBucket: "roletadiapais1104cne2026.firebasestorage.app",
+        messagingSenderId: "272378639090",
+        appId: "1:272378639090:web:06755b635971c1cdb4966b"
+    };
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Configurações do Jogo
+    const NOMES_EQUIPAS = { 
+        1:"Aramis 📜",
+        2:"Porthos 🍷", 
+        3:"Athos ⚜️", 
+        4:"Treville 🏛️", 
+        5:"D'Artagnan ⚔️", 
+        6:"Planchet 🐴" 
+    };
+
     const senhasEquipas = {
         1: "bispo",
         2: "taberna",
@@ -74,107 +86,223 @@
         6: "fiel" 
     };
     
-    // Rotas permitidas (Quais os 4 postos que cada equipa pode fazer)
+    // Todos passam pelos 6 postos disponíveis na atividade, na seguinte ordem
     const rotasValidas = {
-        1: [1, 2, 3, 4],
-        2: [2, 3, 4, 5],
-        3: [3, 4, 5, 6],
-        4: [4, 5, 6, 1],
-        5: [5, 6, 1, 2],
-        6: [6, 1, 2, 3]
+        1: [1, 2, 3, 4, 5, 6],
+        2: [1, 2, 3, 4, 5, 6],
+        3: [1, 2, 3, 4, 5, 6],
+        4: [5, 4, 3, 2, 1, 6], 
+        5: [5, 4, 3, 2, 1, 6],
+        6: [5, 4, 3, 2, 1, 6]
     };
 
-    // Banco de Enigmas e Respostas Corretas
+    // Banco de Enigmas e Respostas Sincronizados
     const enigmas = {
-        1: { q: "O mensageiro traído sussurrou: 'A mensagem tem de chegar a Aramis'. Qual dos quatro mosqueteiros se tornou Bispo e conhecia os segredos mais profundos da Igreja?", a: "aramis" },
-        2: { q: "O assassino deixou um rasto de sangue real. Luís XIV, o Rei Sol, governava a partir do palácio onde nos encontramos. Em que palácio francês foi cometido o crime?", a: "versalhes" },
-        3: { q: "Nas masmorras escuras, um prisioneiro esconde a sua identidade atrás de um metal frio. De que material é feita a máscara do irmão gémeo do Rei?", a: "ferro" },
-        4: { q: "O manuscrito rasgado continha uma marca de perfume caro. Que espia perigosa e marcante usava a flor-de-lis marcada no ombro?", a: "milady" },
-        5: { q: "Para aguentar a caminhada e limpar o sangue das mãos, os mosqueteiros param na taberna. Qual deles é conhecido pelo seu apetite voraz e força descomunal?", a: "porthos" },
-        6: { q: "O brasão real de França que vês gravado nas paredes do palácio possui uma flor tripla que representa a pureza e a monarquia. Que flor é esta?", a: "lirio" }
+        1: { 
+            q: "⚔️ ENIGMA 1 — “A Cifra de César”<br><br>“O Cardeal usa a cifra de César para comunicar com os seus espiões — cada letra é substituída pela que vem 3 posições à frente no alfabeto. Interceptámos uma mensagem. Decifra-a!”", 
+            m: "PDVFDUD GH IHUUR", 
+            a: "MASCARA DE FERRO" 
+        },
+        2: { 
+            q: "⚔️ ENIGMA 2 — “O Código de Porthos”<br><br>“Porthos escondeu informação usando o código dos mosqueteiros: cada letra é substituída pelo número da sua posição no alfabeto. Decifra a palavra!”", 
+            m: "13 – 1 – 19 – 3 – 1 – 18 – 1", 
+            a: "MASCARA" 
+        },
+        3: { 
+            q: "⚔️ ENIGMA 3 — “Quiz Escutista”<br><br>“Em que ano decorreu o primeiro Acampamento Nacional do CNE?”", 
+            m: "(ano do primeiro Acampamento Nacional que se realizou em Aljubarrota - Alcobaça)", 
+            a: "1926" 
+        },
+        4: { 
+            q: "⚔️ ENIGMA 4 — “O Espelho do Homem de Ferro”<br><br>“O Homem de Ferro só consegue ler ao espelho! Decifra a sua mensagem.”", 
+            m: "SODIUGU IESER OD SOGIMA", 
+            a: "AMIGOS DO REI SEGUIDOS" 
+        },
+        5: { 
+            q: "⚔️ ENIGMA 5 — “O Brasão dos Mosqueteiros”<br><br>“Para entrares no castelo, tens de provar que és mosqueteiro. Responde a estas 3 perguntas — a senha é formada pela primeira letra de cada resposta!”<br><br>1. Como se chama o companheiro mais forte de D’Artagnan? (Porthos)<br>2. Qual a cidade onde vivem os mosqueteiros? (Paris)<br>3. Quem é o inimigo principal dos mosqueteiros? (Richelieu)", 
+            m: "Senha: [Letra1][Letra2][Letra3]", 
+            a: "PPR" 
+        },
+        6: { 
+            q: "⚔️ ENIGMA 6 — “Quiz Escutista”<br><br>“Em que ano foi o acampamento da Ilha de Brownsea e conhecido como o acampamento que viria a dar origem ao Movimento Escutista?”", 
+            m: "(que decorreu de 25 de Julho a 9 de Agosto)", 
+            a: "1907" 
+        }
     };
 
-    // Detetar o ID do posto através do link do QR Code (?id=1)
     const urlParams = new URLSearchParams(window.location.search);
     const idPosto = parseInt(urlParams.get('id')) || 1;
-    document.getElementById('num-posto').innerText = `POSTO DE MISSÃO Nº ${idPosto}`;
-    document.getElementById('bloco-pergunta').innerText = enigmas[idPosto].q;
+    
+    if (!enigmas[idPosto]) {
+        document.body.innerHTML = "<h1 style='color:#ff4d4d; margin-top:100px;'>❌ Posto Inválido no Link do QR Code!</h1>";
+    } else {
+        document.getElementById('num-posto').innerText = `POSTO DE MISSÃO Nº ${idPosto}`;
+        document.getElementById('bloco-pergunta').innerHTML = enigmas[idPosto].q;
+        document.getElementById('bloco-mensagem-secreta').innerText = enigmas[idPosto].m;
+    }
 
-    // Relógio Decrescente (100 até 10)
-    let pontosAtuais = 100;
+    let tempoRestante = 300;
     const temporizador = setInterval(() => {
-        if (pontosAtuais > 10) {
-            pontosAtuais--;
-            document.getElementById('cronometro').innerText = pontosAtuais;
+        if (tempoRestante > 0) {
+            tempoRestante--;
+            document.getElementById('cronometro').innerText = tempoRestante;
         } else {
             clearInterval(temporizador);
+            document.getElementById('cronometro').innerText = "0 (Esgotado)";
         }
     }, 1000);
 
-    window.validarEEnviar = async function() {
-        const equipa = parseInt(document.getElementById('equipa-sel').value);
-        const senha = document.getElementById('pass-equipa').value.trim().toLowerCase();
-        const respostaUser = document.getElementById('resposta-enigma').value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Remove acentos
+    function calcularPontuacaoAtual() {
+        if (tempoRestante <= 0) return 10;
+        return Math.round(10 + (tempoRestante / 300) * 40);
+    }
 
-        // 1. Validar password da equipa
+    // 🌟 NOVO: VALIDAÇÃO ESTRITA DE SEQUÊNCIA CRONOLÓGICA
+    async function verificarOrdemDaRota(equipa) {
+        const rotaDaEquipa = rotasValidas[equipa];
+        const indiceAtual = rotaDaEquipa.indexOf(idPosto);
+
+        // Se o posto atual não estiver na rota da equipa por algum motivo
+        if (indiceAtual === -1) return false;
+
+        // Se for o primeiro posto da rota, a ordem está correta por definição
+        if (indiceAtual === 0) return true;
+
+        // Se for o segundo posto ou seguinte, verifica se o posto anterior da lista já foi registado na BD
+        const postoAnteriorNaSequencia = rotaDaEquipa[indiceAtual - 1];
+        const caminhoAnterior = `validacoes/posto_${postoAnteriorNaSequencia}/equipa_${equipa}`;
+        
+        const snapAnterior = await get(ref(db, caminhoAnterior));
+        
+        if (!snapAnterior.exists()) {
+            alert(`❌ ORDEM DA ROTA VIOLADA!\nA equipa ${NOMES_EQUIPAS[equipa]} tentou aceder ao Posto ${idPosto} sem antes ter validado ou desistido do Posto ${postoAnteriorNaSequencia}.\n\nVoltem atrás no vosso mapa!`);
+            return false;
+        }
+        return true;
+    }
+
+    async function efetuarVerificacoesSeguranca(equipa, senha) {
         if (senha !== senhasEquipas[equipa]) {
             alert("Senha secreta da equipa incorreta!");
-            return;
+            return false;
         }
-
-        // 2. VALIDAR SE O POSTO FAZ PARTE DO PERCURSO DESTA EQUIPA
+        
+        // 1. Validar se o posto pertence à rota
         if (!rotasValidas[equipa].includes(idPosto)) {
-            alert("❌ ORDEM INCOMPATÍVEL! Este posto não faz parte das vossas ordens de missão. Consultem o vosso mapa!");
-            return;
+            alert("❌ ORDEM INCOMPATÍVEL! Este posto não faz parte das vossas ordens de missão.");
+            return false;
         }
 
-        // 3. VALIDAR RESPOSTA AO ENIGMA
-        const respostaCerta = enigmas[idPosto].a.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        if (respostaUser !== respostaCerta) {
-            alert("❌ RESPOSTA INCORRETA! O manuscrito rejeitou a vossa chave. Pensem melhor em grupo (o tempo continua a contar!).");
-            return;
-        }
-
-        document.getElementById('btn-validar').disabled = true;
-
-        // 4. TRANCA DOS 5 MINUTOS (Evitar divisões do grupo)
+        // 2. Validar se estão a cumprir a ordem linear (Ex: Não saltar do 5 para o 2)
+        const ordemCorreta = await verificarOrdemDaRota(equipa);
+        if (!ordemCorreta) return false;
+        
+        // 3. Tranca Antiduplicação (evitar que o mesmo tlm envie duas vezes seguidas)
         const caminhoValidacao = `validacoes/posto_${idPosto}/equipa_${equipa}`;
         const snap = await get(ref(db, caminhoValidacao));
         const agora = Date.now();
 
         if (snap.exists()) {
             const ultimaValidacao = snap.val();
-            const diferencaTempo = agora - ultimaValidacao;
-            const cincoMinutosEmMs = 5 * 60 * 1000;
-
-            if (diferencaTempo < cincoMinutosEmMs) {
-                const tempoRestante = Math.ceil((cincoMinutosEmMs - diferencaTempo) / 1000 / 60);
-                alert(`⚠️ GRUPO SEPARADO DETETADO! A vossa equipa já validou um posto muito recentemente. Aguardem ${tempoRestante} min para que todo o grupo chegue.`);
-                document.getElementById('btn-validar').disabled = false;
-                return;
+            if (agora - ultimaValidacao < 5 * 60 * 1000) {
+                alert(`⚠️ ALERTA! A vossa equipa já submeteu este posto recentemente.`);
+                return false;
             }
         }
+        return true;
+    }
 
-        // 5. ATRIBUIR PONTOS SE TUDO PASSOU
-        await set(ref(db, caminhoValidacao), agora);
+    window.validarEEnviar = async function() {
+        const equipa = parseInt(document.getElementById('equipa-sel').value);
+        const senha = document.getElementById('pass-equipa').value.trim().toLowerCase();
+        let respostaUser = document.getElementById('resposta-enigma').value.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        const seguro = await efetuarVerificacoesSeguranca(equipa, senha);
+        if (!seguro) return;
+
+        const respostaCerta = enigmas[idPosto].a.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (respostaUser !== respostaCerta) {
+            alert("❌ RESPOSTA INCORRETA! Pensem melhor (O tempo continua a contar!).");
+            return;
+        }
+
+        document.getElementById('btn-validar').disabled = true;
+        document.getElementById('btn-desistir').disabled = true;
+        clearInterval(temporizador);
+
+        const pontosAAtribuir = calcularPontuacaoAtual();
+        const agora = Date.now();
+
+        await set(ref(db, `validacoes/posto_${idPosto}/equipa_${equipa}`), agora);
 
         const snapPontos = await get(ref(db, `pontosEquipas/${equipa}`));
         const pontosAntigos = snapPontos.exists() ? snapPontos.val() : 0;
-        const novosPontos = pontosAntigos + pontosAtuais;
+        await set(ref(db, `pontosEquipas/${equipa}`), pontosAntigos + pontosAAtribuir);
 
-        await set(ref(db, `pontosEquipas/${equipa}`), novosPontos);
-
-        // Envia para o histórico do Gráfico público
         push(ref(db, 'historicoRespostas'), {
             equipa: equipa,
             posto: idPosto,
-            pontos: pontosAtuais,
+            pontos: pointsAAtribuir,
             hora: agora
         });
 
+        document.body.innerHTML = `<h1 style='color:#e5ba73; margin-top:100px;'>✓ ENIGMA DECIFRADO!<br><br><span style='font-size:0.6em; color:white;'>Excelente rapidez! Adicionaram +${pontosAAtribuir} pontos ao vosso Placar Geral. Sigam para o próximo posto!</span></h1>`;
+    }
+
+    window.desistirDoPosto = async function() {
+        const equipa = parseInt(document.getElementById('equipa-sel').value);
+        const senha = document.getElementById('pass-equipa').value.trim().toLowerCase();
+
+        if (!confirm("⚠️ AVISO DE DESISTÊNCIA:\nTem a certeza de que quer desistir deste enigma? Ao concordar, receberá 0 pontos neste posto e passará para o próximo.")) {
+            return;
+        }
+
+        const seguro = await efetuarVerificacoesSeguranca(equipa, senha);
+        if (!seguro) return;
+
+        document.getElementById('btn-validar').disabled = true;
+        document.getElementById('btn-desistir').disabled = true;
         clearInterval(temporizador);
-        document.body.innerHTML = `<h1 style='color:#e5ba73; margin-top:100px;'>✓ ENIGMA DECIFRADO!<br><br><span style='font-size:0.6em; color:white;'>Adicionaram +${pontosAtuais} pontos ao vosso Placar Geral. Juntem o grupo e sigam para o próximo posto!</span></h1>`;
+
+        const agora = Date.now();
+        // Grava a validação para que o sistema saiba que este posto já foi "resolvido" (com 0) e liberte o posto seguinte!
+        await set(ref(db, `validacoes/posto_${idPosto}/equipa_${equipa}`), agora);
+
+        push(ref(db, 'historicoRespostas'), {
+            equipa: equipa,
+            posto: idPosto,
+            pontos: 0,
+            hora: agora
+        });
+
+        document.body.innerHTML = `<h1 style='color:#ff4d4d; margin-top:100px;'>🏳️ DESISTÊNCIA REGISTADA<br><br><span style='font-size:0.6em; color:white;'>A vossa equipa somou 0 pontos neste checkpoint. Continuem a patrulha até ao próximo posto.</span></h1>`;
     }
 </script>
+
+    <div style="
+        position: fixed; 
+        bottom: 15px; 
+        right: 15px; 
+        z-index: 9999; 
+        background: rgba(13, 27, 42, 0.9); 
+        border: 2px solid #e5ba73; 
+        padding: 8px; 
+        border-radius: 6px; 
+        text-align: center; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        max-width: 110px;
+    ">
+        <img src="PlacardPontuacao.png" alt="QR Code Placar" style="width: 100%; height: auto; display: block; border-radius: 4px;">
+        <span style="
+            display: block; 
+            font-family: Arial, sans-serif; 
+            font-size: 9px; 
+            color: #e5ba73; 
+            margin-top: 4px; 
+            font-weight: bold; 
+            letter-spacing: 0.5px;
+        ">ACOMPANHA OS RESULTADOS EM TEMPO REAL</span>
+    </div>
+
 </body>
 </html>
