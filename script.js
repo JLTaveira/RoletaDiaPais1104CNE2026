@@ -1,11 +1,11 @@
 // Definição das 6 equipas com os caminhos das imagens de ecrã inteiro
 const equipas = {
-    1: { nome: "Os Mosqueteiros de Aramis", imagem: "equipa1.jpg", msg: "Pela honra e pelo manuscrito! Desvendem o segredo de Versalhes antes que o sangue seque na pedra." },
-    2: { nome: "A Guarda Real de d'Artagnan", imagem: "equipa2.jpg", msg: "Lealdade e astúcia! O destino de França está nas vossas mãos. Protejam o segredo do Rei." },
-    3: { nome: "Os Conspiradores da Máscara", imagem: "equipa3.jpg", msg: "Nas sombras mais escuras de Versalhes se esconde a verdade. Libertem o homem da máscara de ferro!" },
-    4: { nome: "Os Segredos de Milady", imagem: "equipa4.jpg", msg: "Intriga, espionagem e passos silenciosos. Ninguém poderá saber que estiveram aqui." },
-    5: { nome: "Os Bravos de Porthos", imagem: "equipa5.jpg", msg: "Força bruta, coragem e companheirismo! Nenhum obstáculo ou parede de Versalhes vos conseguirá travar." },
-    6: { nome: "Os Eruditos de Athos", imagem: "equipa6.jpg", msg: "Sabedoria, precisão e sangue-frio. Sigam o rasto de gotas de sangue sem deixar testemunhas." }
+    1: { nome: "Aramis 📜", imagem: "equipa1.jpg", msg: "Pela honra e pelo manuscrito! Desvendem os segredos mais profundos e sagrados de Versalhes antes que o tempo se esgote." },
+    2: { nome: "Porthos 🍷", imagem: "equipa2.jpg", msg: "Força bruta, coragem e companheirismo! Ergam as vossas canecas na taberna, nenhum obstáculo vos conseguirá travar!" },
+    3: { nome: "Athos ⚜️", imagem: "equipa3.jpg", msg: "Sabedoria, precisão e sangue-frio. Sigam com a solenidade de um nobre Conde e não deixem rastos para trás." },
+    4: { nome: "Treville 🏛️", imagem: "equipa4.jpg", msg: "Intriga, espionagem e passos silenciosos. O Capitão-Comandante exige disciplina militar nesta missão secreta!" },
+    5: { nome: "D'Artagnan ⚔️", imagem: "equipa5.jpg", msg: "Lealdade, astúcia e audácia gascona! O destino de França e a proteção do Rei Sol estão nas pontas das vossas espadas." },
+    6: { nome: "Planchet 🐴", imagem: "equipa6.jpg", msg: "Nas sombras mais escuras das masmorras se esconde a verdade. Libertem o homem da máscara de ferro com astúcia e fidelidade!" }
 };
 
 // Inicialização das tabelas locais se não existirem
@@ -107,25 +107,61 @@ function iniciarSorteio() {
 // ALGORITMO EQUITATIVO
 function algoritmoSorteioEquitativo(jogador) {
     const jogadoresAtuais = JSON.parse(localStorage.getItem('jogadores')) || [];
-    let pontuacaoEquipas = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    let analiseEquipas = {};
 
-    for (let id in equipas) {
+    // 1. Analisar o estado interno de cada uma das 6 equipas
+    for (let id = 1; id <= 6; id++) {
         const membros = jogadoresAtuais.filter(j => j.equipa == id);
-        pontuacaoEquipas[id] += membros.length * 10;
+        
+        // Quantos do mesmo escalão já existem nesta equipa? (Ex: Quantos Lobitos)
         const mesmoEscalao = membros.filter(j => j.escalao === jogador.escalao).length;
-        pontuacaoEquipas[id] += mesmoEscalao * 5;
+        
+        // Quantos do mesmo escalão E do mesmo género já existem? (Ex: Quantos rapazes Lobitos)
         const mesmoGeneroEEscalao = membros.filter(j => j.escalao === jogador.escalao && j.genero === jogador.genero).length;
-        pontuacaoEquipas[id] += mesmoGeneroEEscalao * 3;
+
+        analiseEquipas[id] = {
+            id: id,
+            totalAbsoluto: membros.length,
+            vagasEscalao: mesmoEscalao,
+            vagasGeneroEscalao: mesmoGeneroEEscalao
+        };
     }
 
-    let equipasElegiveis = [1, 2, 3, 4, 5, 6].filter(id => !jogador.equipasBloqueadas.includes(id));
-    if (equipasElegiveis.length === 0) equipasElegiveis = [1, 2, 3, 4, 5, 6];
-    equipasElegiveis.sort((a, b) => pontuacaoEquipas[a] - pontuacaoEquipas[b]);
+    // 2. Filtrar apenas as equipas que não foram bloqueadas pelo Admin
+    let equipasElegiveisIds = [1, 2, 3, 4, 5, 6].filter(id => !jogador.equipasBloqueadas.includes(id));
+    
+    // Salvaguarda: Se o Admin bloqueou tudo por engano, liberta todas
+    if (equipasElegiveisIds.length === 0) equipasElegiveisIds = [1, 2, 3, 4, 5, 6];
 
-    if (equipasElegiveis.length > 1 && Math.abs(pontuacaoEquipas[equipasElegiveis[0]] - pontuacaoEquipas[equipasElegiveis[1]]) <= 2) {
-        return Math.random() > 0.5 ? equipasElegiveis[0] : equipasElegiveis[1];
+    // Converter para array de objetos das elegíveis para podermos ordenar
+    let listaFiltrada = equipasElegiveisIds.map(id => analiseEquipas[id]);
+
+    // 3. ORDENAÇÃO POR PRIORIDADE ESTRITA:
+    // Critério A: Vai para onde houver MENOS pessoas do mesmo género e escalão (Prioridade Máxima)
+    // Critério B: Em caso de empate, vai para onde houver MENOS pessoas do mesmo escalão
+    // Critério C: Em caso de novo empate, vai para a equipa com MENOS elementos no total global
+    listaFiltrada.sort((a, b) => {
+        if (a.vagasGeneroEscalao !== b.vagasGeneroEscalao) {
+            return a.vagasGeneroEscalao - b.vagasGeneroEscalao;
+        }
+        if (a.vagasEscalao !== b.vagasEscalao) {
+            return a.vagasEscalao - b.vagasEscalao;
+        }
+        return a.totalAbsoluto - b.totalAbsoluto;
+    });
+
+    // 4. INTRODUÇÃO DE FACTOR ALEATÓRIO CONTROLADO (Para manter a mística da roleta)
+    // Se as duas melhores opções estiverem perfeitamente empatadas no critério de Género+Escalão,
+    // baralhamos entre as duas em 50% das vezes para que o sorteio pareça orgânico.
+    if (listaFiltrada.length > 1 && 
+        listaFiltrada[0].vagasGeneroEscalao === listaFiltrada[1].vagasGeneroEscalao &&
+        listaFiltrada[0].vagasEscalao === listaFiltrada[1].vagasEscalao) {
+        
+        return Math.random() > 0.5 ? listaFiltrada[0].id : listaFiltrada[1].id;
     }
-    return equipasElegiveis[0];
+
+    // Caso contrário, entrega obrigatoriamente à equipa matematicamente mais necessitada
+    return listaFiltrada[0].id;
 }
 
 function salvarJogadorNaEquipa(jogador, equipaID) {
