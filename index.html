@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Versalhes - Placar de Peças do Puzzle</title>
+    <title>Mistério em Versalhes - Placar de Pontuações</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -17,12 +17,9 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Impede o scroll na sede */
+            overflow: hidden;
         }
-        
-        header { padding: 5px 0; }
         h1 { color: #e5ba73; font-size: 1.8em; margin: 0 0 2px 0; text-transform: uppercase; letter-spacing: 1px; }
-        p.sub { font-size: 1.1em; color: #e5ba73; margin: 0; font-weight: bold; }
         
         .grid-dashboard { 
             display: flex; 
@@ -43,12 +40,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
         
-        .card-grafico { 
-            flex: 2; 
-            position: relative; 
-            height: 100%; 
-        }
-        
+        .card-grafico { flex: 2; position: relative; height: 100%; }
         .card-placar { 
             flex: 1; 
             display: flex; 
@@ -59,36 +51,17 @@
         }
         
         h2, h3 { color: #e5ba73; margin: 0 0 10px 0; font-size: 1.3em; border-bottom: 1px solid #e5ba73; padding-bottom: 5px; }
+        #tabela-pecas-detalhe { text-align: left; font-size: 1.05em; line-height: 1.6; flex: 1; }
         
-        #tabela-pecas-detalhe { 
-            text-align: left; 
-            font-size: 1.05em; 
-            line-height: 1.6; 
-            flex: 1;
-        }
-        
-        #lista-ultimas { 
-            text-align: left; 
-            font-size: 0.9em; 
-            list-style-type: none; 
-            padding: 0; 
-            margin: 0;
-        }
-        #lista-ultimas li { 
-            padding: 5px; 
-            border-bottom: 1px solid #1b263b; 
-            color: #aaa;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        #lista-ultimas { text-align: left; font-size: 0.9em; list-style-type: none; padding: 0; margin: 0; }
+        #lista-ultimas li { padding: 5px; border-bottom: 1px solid #1b263b; color: #aaa; }
+        .item-bonus-fixo { font-weight: bold; color: #d4af37 !important; display: flex; justify-content: space-between; }
 
-        /* 📱 REGRAS ESPECÍFICAS PARA TELEMÓVEL (ECRÃS PEQUENOS) */
         @media (max-width: 768px) {
-            body { overflow: auto; height: auto; } /* Permite scroll no telemóvel se necessário */
+            body { overflow: auto; height: auto; }
             h1 { font-size: 1.4em; }
             .grid-dashboard { flex-direction: column; height: auto; }
-            .card-grafico { height: 350px; flex: none; } /* Força o gráfico a ter um tamanho fixo e visível no tlm */
+            .card-grafico { height: 350px; flex: none; }
             .card-placar { flex: none; height: auto; }
         }
     </style>
@@ -96,8 +69,8 @@
 <body>
 
     <header style="padding: 5px 0;">
-        <h1>Batalha dos Mosqueteiros</h1>
-        <p style="font-size:1.1em; color:#e5ba73; margin:0; font-weight:bold;">Ganhar o mais número de peças do Puzzle</p>
+        <h1 id="titulo-principal">Mistério em Versalhes - Campanha Ativa</h1>
+        <p id="subtitulo-principal" style="font-size:1.1em; color:#e5ba73; margin:0; font-weight:bold;">A decifrar manuscritos na floresta de Versalhes...</p>
     </header>
     
     <div class="grid-dashboard">
@@ -107,22 +80,23 @@
         
         <div class="card card-placar">
             <div>
-                <h2>Peças do Puzzle</h2>
-                <div id="tabela-pecas-detalhe">A calcular proporções...</div>
+                <h2 id="titulo-caixa-detalhe">Pontuação Geral (Manuscritos)</h2>
+                <div id="tabela-pecas-detalhe">A carregar pontos...</div>
             </div>
             
             <div style="margin-top: 15px;">
-                <h3 id="titulo-dinamico-lateral">Jogos</h3>
+                <h3 id="titulo-dinamico-lateral">Últimos Movimentos</h3>
                 <ul id="lista-ultimas"><li>A aguardar missões...</li></ul>
             </div>
         </div>
     </div>
 
 <script type="module">
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-    // ⚠️ COLA AQUI O TEU FIREBASE CONFIG REAL
+
     const firebaseConfig = {
         apiKey: "AIzaSyDPmHr8hlA5GAIfZP76GjDjeZX1as51v4Y",
         authDomain: "roletadiapais1104cne2026.firebaseapp.com",
@@ -139,13 +113,18 @@
     const PUZZLE_TOTAL_PECAS = 160; 
     const NOMES_EQUIPAS = ["Aramis", "Porthos", "Athos", "Treville", "D'Artagnan", "Planchet"];
 
+    let jogoEncerradoOficialmente = false;
+    let pontosGlobais = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 };
+    let bonusGlobais = { intermedio: {}, final: {} };
+    let listaLogsHistorico = [];
+
     const ctx = document.getElementById('graficoPecas').getContext('2d');
     const grafico = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: ["Aramis 📜", "Porthos 🍷", "Athos ⚜️", "Treville 🏛️", "D'Artagnan ⚔️", "Planchet 🐴"],
             datasets: [{
-                label: 'Peças Conquistadas',
+                label: 'Pontos nos Postos',
                 data: [0, 0, 0, 0, 0, 0],
                 backgroundColor: ['#2a6f97', '#a71e34', '#4a5759', '#6f2dbd', '#014f86', '#d4af37'],
                 borderColor: '#e5ba73',
@@ -162,15 +141,43 @@
         }
     });
 
-    let pontosGlobais = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 };
-    let bonusGlobais = { intermedio: {}, final: {} };
-    let listaLogsHistorico = [];
+    function atualizarInterfaceJogoAtivo() {
+        let txtDetalhe = "";
+        let valoresPontos = [0, 0, 0, 0, 0, 0];
 
-    function recalcularEAtualizarEcra() {
+        for (let i = 0; i < 6; i++) {
+            const eqId = i + 1;
+            const pts = pontosGlobais[eqId] || 0;
+            valoresPontos[i] = pts;
+            txtDetalhe += `• <strong>${NOMES_EQUIPAS[i]}:</strong> ${pts} Pontos acumulados<br>`;
+        }
+
+        grafico.data.datasets[0].label = "Pontos nos Postos";
+        grafico.data.datasets[0].data = valoresPontos;
+        grafico.update();
+
+        document.getElementById('tabela-pecas-detalhe').innerHTML = txtDetalhe;
+
+        const ulLateral = document.getElementById('lista-ultimas');
+        if (listaLogsHistorico.length === 0) {
+            ulLateral.innerHTML = "<li>A aguardar missões...</li>";
+        } else {
+            let htmlLogs = "";
+            listaLogsHistorico.forEach(log => {
+                htmlLogs += `<li>Equipa ${log.equipa} (${NOMES_EQUIPAS[log.equipa-1]}) fez Posto ${log.posto} (+${log.pontos} pts)</li>`;
+            });
+            ulLateral.innerHTML = htmlLogs;
+        }
+    }
+
+    function calcularEExibirResultadoFinalDoPuzzle() {
+        document.getElementById('titulo-caixa-detalhe').innerText = "Resultado do Puzzle (Finais)";
+        document.getElementById('titulo-dinamico-lateral').innerText = "🧩 Peças Fixas de Bónus";
+        document.getElementById('titulo-dinamico-lateral').style.color = "#d4af37";
+
         let totalPecasBonusEntregues = 0;
         let pecasBonusPorEquipa = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 };
 
-        // Processamento das peças de bónus presenciais fixas
         for(let eq=1; eq<=6; eq++) {
             let bIntermedio1 = (bonusGlobais.intermedio && bonusGlobais.intermedio.jogo1) ? (bonusGlobais.intermedio.jogo1[eq] || 0) : 0;
             let bIntermedio2 = (bonusGlobais.intermedio && bonusGlobais.intermedio.jogo2) ? (bonusGlobais.intermedio.jogo2[eq] || 0) : 0;
@@ -180,86 +187,81 @@
             totalPecasBonusEntregues += pecasBonusPorEquipa[eq];
         }
 
-        // As restantes peças (até perfazer as 100 da floresta + as que sobrarem) entram na proporção
-        let pecasDisponiveisParaProporcao = PUZZLE_TOTAL_PECAS - totalPecasBonusEntregues;
-        let totalPontosQRCodes = Object.values(pontosGlobais).reduce((a, b) => a + b, 0);
+        let pecasDisponiveisParaProporcao = PUZZLE_TOTAL_PECAS - totalPecasBonusEntregues; 
+        let totalPontosQRCodes = 0;
+        for (let eqId = 1; eqId <= 6; eqId++) {
+            totalPontosQRCodes += parseInt(pontosGlobais[eqId] || 0);
+        }
 
         let pecasFinaisCalculadas = [0, 0, 0, 0, 0, 0];
         let txtDetalhe = "";
+        let htmlBonusFixo = "";
+
+        // Encontrar o vencedor sem loops perigosos
+        let maiorValor = -1;
+        let nomeEquipaVencedora = "Mosqueteiros";
 
         for (let i = 0; i < 6; i++) {
             const eqId = i + 1;
+            let ptsDestaEquipa = parseInt(pontosGlobais[eqId] || 0);
             let pecasDoQrCode = 0;
 
-            if (totalPontosQRCodes > 0) {
-                pecasDoQrCode = (pontosGlobais[eqId] / totalPontosQRCodes) * pecasDisponiveisParaProporcao;
+            if (totalPontosQRCodes > 0 && ptsDestaEquipa > 0) {
+                pecasDoQrCode = (ptsDestaEquipa / totalPontosQRCodes) * pecasDisponiveisParaProporcao;
             }
 
-            let totalPecasArredondado = Math.round(pecasDoQrCode + pecasBonusPorEquipa[eqId]);
+            let bonusDestaEquipa = pecasBonusPorEquipa[eqId] || 0;
+            let totalPecasArredondado = Math.round(pecasDoQrCode + bonusDestaEquipa);
+            
             pecasFinaisCalculadas[i] = totalPecasArredondado;
 
-            txtDetalhe += `• <strong>${NOMES_EQUIPAS[i]}:</strong> ${totalPecasArredondado} Peças <span style='font-size:0.75em; color:#888;'>(Bónus: ${pecasBonusPorEquipa[eqId]} | Rua: ${Math.round(pecasDoQrCode)})</span><br>`;
+            if (totalPecasArredondado > maiorValor) {
+                maiorValor = totalPecasArredondado;
+                nomeEquipaVencedora = NOMES_EQUIPAS[i];
+            }
+
+            txtDetalhe += `• <strong>${NOMES_EQUIPAS[i]}:</strong> ${totalPecasArredondado} Peças Totais <span style='font-size:0.75em; color:#888;'>(Rua: ${Math.round(pecasDoQrCode)})</span><br>`;
+            htmlBonusFixo += `<li class="item-bonus-fixo"><span>${NOMES_EQUIPAS[i]}</span> <span>+${bonusDestaEquipa} Peças</span></li>`;
         }
 
+        // 🏆 ALTERAÇÃO DIRETA SEGURA NOS DOIS ELEMENTOS EXISTENTES DO TOPO:
+        document.getElementById('titulo-principal').innerText = `🏆 VENCEDOR: EQUIPA ${nomeEquipaVencedora.toUpperCase()} 🏆`;
+        document.getElementById('subtitulo-principal').innerText = "Grande Jogo Encerrado! Parabéns a todos os Mosqueteiros!";
+
+        grafico.data.datasets[0].label = "Peças de Puzzle Conquistadas";
         grafico.data.datasets[0].data = pecasFinaisCalculadas;
         grafico.update();
+
         document.getElementById('tabela-pecas-detalhe').innerHTML = txtDetalhe;
-
-        // Regra Dinâmica da Barra Lateral Condicionada ao Jogo Final
-        let existeVencedorFinal = Object.values(bonusGlobais.final || {}).some(v => v > 0);
-        const ulLateral = document.getElementById('lista-ultimas');
-        const h3Lateral = document.getElementById('titulo-dinamico-lateral');
-
-        if (existeVencedorFinal) {
-            h3Lateral.innerText = "🧩 Bónus Presenciais Conquistados";
-            h3Lateral.style.color = "#d4af37";
-            let htmlBonus = "";
-            for (let i = 0; i < 6; i++) {
-                const eqId = i + 1;
-                htmlBonus += `<li class="item-bonus-fixo"><span>${NOMES_EQUIPAS[i]}</span> <span>+${pecasBonusPorEquipa[eqId]} Peças</span></li>`;
-            }
-            ulLateral.innerHTML = htmlBonus;
-        } else {
-            h3Lateral.innerText = "⚡ Últimos Movimentos";
-            h3Lateral.style.color = "#e5ba73";
-            if (listaLogsHistorico.length === 0) {
-                ulLateral.innerHTML = "<li>A aguardar missões...</li>";
-            } else {
-                let htmlLogs = "";
-                listaLogsHistorico.forEach(log => {
-                    htmlLogs += `<li>Equipa ${log.equipa} (${NOMES_EQUIPAS[log.equipa-1]}) decifrou Posto ${log.posto}</li>`;
-                });
-                ulLateral.innerHTML = htmlLogs;
-            }
-        }
+        document.getElementById('lista-ultimas').innerHTML = htmlBonusFixo;
     }
-
-    let jogoEncerradoOficialmente = false;
 
     onValue(ref(db, 'fimDoJogo'), (snapshot) => {
         if (snapshot.val() === true) {
             jogoEncerradoOficialmente = true;
-            document.querySelector('h1').innerText = "🏁 CLASSIFICAÇÃO FINAL - JOGO CONCLUÍDO 🏁";
+            calcularEExibirResultadoFinalDoPuzzle();
         }
     });
 
     onValue(ref(db, 'pontosEquipas'), (snapshot) => {
+        if (jogoEncerradoOficialmente) return; 
         pontosGlobais = snapshot.val() || { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 };
-        recalcularEAtualizarEcra();
+        atualizarInterfaceJogoAtivo();
     });
 
     onValue(ref(db, 'pecasBonus'), (snapshot) => {
         bonusGlobais = snapshot.val() || { intermedio: {}, final: {} };
-        if(!bonusGlobais.intermedio) bonusGlobais.intermedio = {};
-        if(!bonusGlobais.final) bonusGlobais.final = {};
-        recalcularEAtualizarEcra();
+        if (jogoEncerradoOficialmente) {
+            calcularEExibirResultadoFinalDoPuzzle();
+        }
     });
 
     onValue(ref(db, 'historicoRespostas'), (snapshot) => {
+        if (jogoEncerradoOficialmente) return;
         const dados = snapshot.val(); 
         if(!dados) { listaLogsHistorico = []; return; }
         listaLogsHistorico = Object.values(dados).reverse().slice(0, 4);
-        recalcularEAtualizarEcra();
+        atualizarInterfaceJogoAtivo();
     });
 </script>
 </body>
