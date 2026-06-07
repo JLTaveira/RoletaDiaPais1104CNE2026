@@ -171,8 +171,8 @@
     }
 
     function calcularEExibirResultadoFinalDoPuzzle() {
-        document.getElementById('titulo-caixa-detalhe').innerText = "Resultado do Puzzle (Finais)";
-        document.getElementById('titulo-dinamico-lateral').innerText = "🧩 Peças Fixas de Bónus";
+        document.getElementById('titulo-caixa-detalhe').innerText = "Resultados Finais";
+        document.getElementById('titulo-dinamico-lateral').innerText = "🧩 Peças de Bónus";
         document.getElementById('titulo-dinamico-lateral').style.color = "#d4af37";
 
         let totalPecasBonusEntregues = 0;
@@ -226,7 +226,7 @@
 
         // 🏆 ALTERAÇÃO DIRETA SEGURA NOS DOIS ELEMENTOS EXISTENTES DO TOPO:
         document.getElementById('titulo-principal').innerText = `🏆 VENCEDOR: EQUIPA ${nomeEquipaVencedora.toUpperCase()} 🏆`;
-        document.getElementById('subtitulo-principal').innerText = "Grande Jogo Encerrado! Parabéns a todos os Mosqueteiros!";
+        document.getElementById('subtitulo-principal').innerText = "Parabéns a todos os Mosqueteiros!";
 
         grafico.data.datasets[0].label = "Peças de Puzzle Conquistadas";
         grafico.data.datasets[0].data = pecasFinaisCalculadas;
